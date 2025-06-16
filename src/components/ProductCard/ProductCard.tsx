@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Check, ShoppingCart, Star } from 'lucide-react'
+import { useToast } from '@/components/ui/use-toast'
+import { useCartStore } from '@/store/cartStore'
 import type { ProductWithRelations } from '@/types/supabase'
 import ProductGallery from './ProductGallery'
 
@@ -19,6 +21,8 @@ type ProductCardProps = {
 export function ProductCard({ product, className = '' }: ProductCardProps) {
   const t = useTranslations('products')
   const tCommon = useTranslations('common')
+  const { toast } = useToast()
+  const { addItem } = useCartStore()
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('bg-BG', {
@@ -31,6 +35,21 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
   const discountPercentage = hasDiscount ? Math.round(((product.compare_price! - product.price) / product.compare_price!) * 100) : 0
   const isLowStock = product.stock > 0 && product.stock < 5
   const isInStock = product.stock > 0
+
+  const handleAddToCart = () => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image_url: product.images?.[0]?.url || '/placeholder-product.jpg',
+      stock: product.stock
+    })
+
+    toast({
+      title: '✔ Добавено',
+      description: `${product.name} е добавено във вашата количка`,
+    })
+  }
 
   return (
     <motion.div 
@@ -147,6 +166,7 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
         {/* CTA Button with Micro-interactions */}
         <motion.button
           disabled={!isInStock}
+          onClick={handleAddToCart}
           whileTap={{ scale: 0.95 }}
           whileHover={{ 
             boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.2)",
