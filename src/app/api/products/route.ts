@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProducts, createProduct } from '@/services/productService'
-import { requireServerAuth, isAdmin } from '@/lib/db'
 import type { ProductFilters, ProductPagination } from '@/services/productService'
 
 export async function GET(request: NextRequest) {
@@ -70,18 +69,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Require authentication
-    const user = await requireServerAuth()
-    
-    // Check if user is admin
-    const userIsAdmin = await isAdmin(user.id)
-    if (!userIsAdmin) {
-      return NextResponse.json(
-        { success: false, error: 'Insufficient permissions' },
-        { status: 403 }
-      )
-    }
-
     const productData = await request.json()
     
     // Validate required fields
@@ -100,13 +87,6 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
   } catch (error) {
     console.error('Create product API error:', error)
-    
-    if (error instanceof Error && error.message === 'Authentication required') {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
     
     return NextResponse.json(
       { success: false, error: 'Internal server error' },

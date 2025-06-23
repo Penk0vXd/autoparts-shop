@@ -1,11 +1,27 @@
 import Image from 'next/image'
 import { Product } from '@/types/db'
+import { useCartStore } from '@/store/cartStore'
+import { Button } from '@/components/ui/button'
 
 type ProductDetailsProps = {
   product: Product
 }
 
 export function ProductDetails({ product }: ProductDetailsProps) {
+  const { addItem } = useCartStore()
+
+  const handleAddToCart = () => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      slug: product.slug || product.id,
+      price: product.price,
+      image: product.images?.[0] || '',
+      stock: product.stock || 0,
+      sku: product.sku
+    })
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -31,11 +47,13 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             <span className="text-gray-600">В наличност:</span>
             <span className="font-semibold">{product.stock} бр.</span>
           </div>
-          <button
-            className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          <Button
+            onClick={handleAddToCart}
+            disabled={product.stock <= 0}
+            className="w-full md:w-auto px-6 py-3"
           >
-            Добави в количката
-          </button>
+            {product.stock > 0 ? 'Добави в количката' : 'Няма наличност'}
+          </Button>
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { Header } from '@/components/Header/Header'
 import { SearchDialog } from '@/components/SearchDialog/SearchDialog'
 import { GlobalKeyboardShortcuts } from '@/components/GlobalKeyboardShortcuts'
 import Footer from '@/components/Footer/Footer'
+import { ToastContainer } from '@/components/ui/Toast'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] })
@@ -47,6 +48,7 @@ export default async function RootLayout({
 
             <Footer />
           </div>
+          <ToastContainer />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -1,115 +1,97 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { stripe } from '@/lib/stripe'
+import { createClient } from '@supabase/supabase-js'
+import { headers } from 'next/headers'
 import Stripe from 'stripe'
-import { supabase } from '@/lib/db'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
-if (!process.env.STRIPE_WEBHOOK_SECRET) {
-  throw new Error('STRIPE_WEBHOOK_SECRET is not set')
-}
+export async function POST(req: NextRequest) {
+  const body = await req.text()
+  const headersList = await headers()
+  const signature = headersList.get('stripe-signature')
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16'
-})
+  if (!signature) {
+    return NextResponse.json(
+      { error: 'Missing Stripe signature' },
+      { status: 400 }
+    )
+  }
 
-export const runtime = 'edge'
+  let event: Stripe.Event
 
-export async function POST(request: NextRequest) {
   try {
-    const body = await request.text()
-    const signature = request.headers.get('stripe-signature')
-
-    if (!signature) {
-      return new NextResponse(
-        JSON.stringify({ error: 'No signature' }),
-        { 
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-    }
-
-    // Verify webhook signature
-    const event = stripe.webhooks.constructEvent(
+    event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     )
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err)
+    return NextResponse.json(
+      { error: 'Webhook signature verification failed' },
+      { status: 400 }
+    )
+  }
 
-    // Handle the event
+  try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         
-        // Update order status
-        const { error: orderError } = await supabase
+        // Update order status in database
+        const { error } = await supabase
           .from('orders')
-          .update({ status: 'paid' })
-          .eq('id', session.metadata?.order_id)
+          .update({
+            payment_status: 'paid',
+            stripe_payment_id: session.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq('stripe_payment_id', session.id)
 
-        if (orderError) throw orderError
-
-        // Get order items
-        const { data: orderItems, error: itemsError } = await supabase
-          .from('order_items')
-          .select('product_id, quantity')
-          .eq('order_id', session.metadata?.order_id)
-
-        if (itemsError) throw itemsError
-
-        // Update product stock
-        for (const item of orderItems) {
-          const { error: stockError } = await supabase.rpc(
-            'decrement_product_stock',
-            {
-              p_product_id: item.product_id,
-              p_quantity: item.quantity
-            }
-          )
-
-          if (stockError) throw stockError
+        if (error) {
+          console.error('Error updating order:', error)
         }
-
         break
       }
 
-      case 'checkout.session.expired': {
-        const session = event.data.object as Stripe.Checkout.Session
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent
+        console.log('Payment succeeded:', paymentIntent.id)
+        break
+      }
+
+      case 'payment_intent.payment_failed': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent
         
-        // Update order status
-        const { error: orderError } = await supabase
+        // Update order status to failed
+        const { error } = await supabase
           .from('orders')
-          .update({ status: 'expired' })
-          .eq('id', session.metadata?.order_id)
+          .update({
+            payment_status: 'failed',
+            updated_at: new Date().toISOString()
+          })
+          .eq('stripe_payment_id', paymentIntent.id)
 
-        if (orderError) throw orderError
+        if (error) {
+          console.error('Error updating failed payment:', error)
+        }
         break
       }
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`)
     }
 
-    return new NextResponse(
-      JSON.stringify({ received: true }),
-      { 
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )
+    return NextResponse.json({ received: true })
   } catch (error) {
-    console.error('Webhook error:', error)
-    return new NextResponse(
-      JSON.stringify({ error: 'Webhook handler failed' }),
-      { 
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
+    console.error('Webhook handler error:', error)
+    return NextResponse.json(
+      { error: 'Webhook handler failed' },
+      { status: 500 }
     )
   }
 } 

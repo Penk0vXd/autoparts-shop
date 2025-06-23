@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSelectedLayoutSegment } from 'next/navigation'
@@ -9,6 +9,10 @@ import { MAIN_NAV } from '@/config/main-nav'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { useSearchStore } from '@/store/searchStore'
+import { useCartStore } from '@/store/cartStore'
+import { CartIcon } from '@/components/ui/CartIcon'
+import { OrderDrawer } from '@/components/OrderDrawer/OrderDrawer'
+import { useHydration } from '@/hooks/useHydration'
 
 /**
  * Main application header with responsive navigation
@@ -16,11 +20,12 @@ import { useSearchStore } from '@/store/searchStore'
  */
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
+  const hydrated = useHydration()
   const selectedSegment = useSelectedLayoutSegment()
   const { open: openSearch } = useSearchStore()
+  const { getTotalItems, isDrawerOpen, openDrawer, closeDrawer } = useCartStore()
   
-  // Mock cart items count - replace with actual cart store
-  const cartItemsCount = 0
+  const cartItemsCount = hydrated ? getTotalItems() : 0
 
   const isActiveLink = (href: string) => {
     const segment = href.replace('/', '')
@@ -103,11 +108,7 @@ export function Header() {
                   </Link>
                 ))}
                 
-                <div className="border-t pt-4 mt-8">
-                  <Button variant="outline" className="w-full">
-                    Вход
-                  </Button>
-                </div>
+
               </nav>
             </SheetContent>
           </Sheet>
@@ -124,20 +125,15 @@ export function Header() {
           </Button>
 
           {/* Cart Button */}
-          <Link href="/cart" aria-label={`Количка с ${cartItemsCount} артикула`}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">
-                  {cartItemsCount > 99 ? '99+' : cartItemsCount}
-                </span>
-              )}
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={openDrawer}
+            aria-label={`Количка с ${cartItemsCount} артикула`}
+            className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
+          >
+            <CartIcon />
+          </Button>
 
           {/* User Dropdown - Replace with Makerkit UserDropdown */}
           <Button
@@ -152,6 +148,12 @@ export function Header() {
           </Button>
         </div>
       </div>
+
+      {/* Order Drawer */}
+      <OrderDrawer
+        open={isDrawerOpen}
+        onOpenChange={(open) => open ? openDrawer() : closeDrawer()}
+      />
     </header>
   )
 } 

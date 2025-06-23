@@ -43,7 +43,7 @@ export const createCheckoutSession = async (items: Array<{
 }
 
 export const getStripePublicKey = () => {
-  const key = process.env.STRIPE_PUBLIC_KEY
+  const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   if (!key) {
     throw new Error('Missing Stripe public key')
   }

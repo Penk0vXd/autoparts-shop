@@ -1,0 +1,58 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
+.env
+.env.docker
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+logs
+*.log
+
+# Supabase temp files
+/supabase/.temp/
+
+# Cache directories
+.cache
+.parcel-cache
+.fusebox/
+.serverless
+.nyc_output 

@@ -6,7 +6,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('DATABASE_URL is required. Application cannot start without a database.')
+  throw new Error('Missing Supabase environment variables')
 }
 
 // Client-side Supabase client (with RLS)

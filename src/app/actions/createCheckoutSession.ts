@@ -1,82 +1,131 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import Stripe from 'stripe'
-import { supabase } from '@/lib/db'
-import { requireServerAuth } from '@/lib/auth'
-import type { CartItem } from '@/store/cartStore'
-import type { CheckoutForm } from '@/store/checkoutStore'
+import { stripe } from '@/lib/stripe'
+import type { DeliveryInfo, PaymentInfo, OrderSummary } from '@/store/cartStore'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set')
+interface CheckoutItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  image: string
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16'
-})
+interface CheckoutSessionData {
+  items: CheckoutItem[]
+  deliveryInfo: DeliveryInfo
+  paymentInfo: PaymentInfo
+  summary: OrderSummary
+}
 
-export async function createCheckoutSession(data: {
-  items: CartItem[]
-} & CheckoutForm) {
+export async function createCheckoutSession(data: CheckoutSessionData) {
+  const { items, deliveryInfo, paymentInfo, summary } = data
+
+  // Ensure we have a proper base URL with scheme
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.startsWith('http') 
+    ? process.env.NEXT_PUBLIC_SITE_URL 
+    : `http://localhost:3000`
+
   try {
-    // Require authentication
-    const user = await requireServerAuth()
+    // Create line items for Stripe
+    const lineItems = items.map(item => ({
+      price_data: {
+        currency: 'bgn',
+        product_data: {
+          name: item.name,
+          images: item.image ? [item.image] : [],
+        },
+        unit_amount: Math.round(item.price * 100), // Convert to stotinki
+      },
+      quantity: item.quantity,
+    }))
 
-    // Start a transaction
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        status: 'pending',
-        shipping_details: data.shipping,
-        billing_details: data.billing,
-        total: data.items.reduce((sum, item) => sum + (item.price * item.qty), 0)
-      })
-      .select()
-      .single()
-
-    if (orderError) throw orderError
-
-    // Create order items
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(
-        data.items.map(item => ({
-          order_id: order.id,
-          product_id: item.id,
-          quantity: item.qty,
-          price: item.price
-        }))
-      )
-
-    if (itemsError) throw itemsError
-
-    // Create Stripe session
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: data.items.map(item => ({
+    // Add delivery fee if applicable
+    if (summary.deliveryFee > 0) {
+      lineItems.push({
         price_data: {
           currency: 'bgn',
           product_data: {
-            name: item.name,
-            images: [item.image_url]
+            name: 'Доставка',
           },
-          unit_amount: Math.round(item.price * 100)
+          unit_amount: Math.round(summary.deliveryFee * 100),
         },
-        quantity: item.qty
-      })),
-      customer_email: data.shipping.email,
+        quantity: 1,
+      })
+    }
+
+    // Create discount coupon if applicable
+    let discounts = undefined
+    if (summary.discount > 0) {
+      const coupon = await stripe.coupons.create({
+        amount_off: Math.round(summary.discount * 100),
+        currency: 'bgn',
+        duration: 'once',
+      })
+      
+      discounts = [{ coupon: coupon.id }]
+    }
+
+    // Determine payment method types based on selection
+    const paymentMethodTypes: string[] = []
+    switch (paymentInfo.method) {
+      case 'card':
+        paymentMethodTypes.push('card')
+        break
+      case 'digital':
+        paymentMethodTypes.push('card') // Stripe handles Apple/Google Pay via card
+        break
+      case 'cash':
+        // For cash on delivery, we still create a session but with special handling
+        paymentMethodTypes.push('card')
+        break
+    }
+
+    // Create customer address if provided
+    let shippingAddressCollection = undefined
+    let customerAddress = undefined
+
+    if (deliveryInfo.method === 'address' && deliveryInfo.address) {
+      shippingAddressCollection = {
+        allowed_countries: ['BG'],
+      }
+      
+      customerAddress = {
+        line1: deliveryInfo.address.street,
+        city: deliveryInfo.address.city,
+        postal_code: deliveryInfo.address.postalCode,
+        country: 'BG',
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: paymentMethodTypes,
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/cart`,
+      shipping_address_collection: shippingAddressCollection,
+      billing_address_collection: 'required',
+      discounts,
       metadata: {
-        order_id: order.id
+        delivery_method: deliveryInfo.method,
+        payment_method: paymentInfo.method,
+        delivery_address: deliveryInfo.method === 'address' 
+          ? JSON.stringify(deliveryInfo.address)
+          : '',
+        office_info: deliveryInfo.method === 'office'
+          ? JSON.stringify(deliveryInfo.office)
+          : '',
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cart`
+      phone_number_collection: {
+        enabled: true,
+      },
     })
 
-    return session.url
+    return { url: session.url }
   } catch (error) {
-    console.error('Checkout session error:', error)
+    console.error('Error creating checkout session:', error)
     throw new Error('Failed to create checkout session')
   }
 } 

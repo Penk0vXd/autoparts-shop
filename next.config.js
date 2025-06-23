@@ -36,7 +36,8 @@ const nextConfig = {
     // Fallback for unoptimized images
     unoptimized: false,
   },
-  output: 'standalone',
+  // Remove standalone output for Vercel - Vercel handles this automatically
+  // output: 'standalone',
 };
 
 module.exports = withNextIntl(nextConfig); 

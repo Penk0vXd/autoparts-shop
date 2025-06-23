@@ -4,10 +4,9 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Check, ShoppingCart, Star } from 'lucide-react'
-import { useToast } from '@/components/ui/use-toast'
-import { useCartStore } from '@/store/cartStore'
 import type { ProductWithRelations } from '@/types/supabase'
 import ProductGallery from './ProductGallery'
+import { useCartStore } from '@/store/cartStore'
 
 type ProductCardProps = {
   product: ProductWithRelations
@@ -21,7 +20,6 @@ type ProductCardProps = {
 export function ProductCard({ product, className = '' }: ProductCardProps) {
   const t = useTranslations('products')
   const tCommon = useTranslations('common')
-  const { toast } = useToast()
   const { addItem } = useCartStore()
 
   const formatPrice = (price: number) => {
@@ -36,18 +34,18 @@ export function ProductCard({ product, className = '' }: ProductCardProps) {
   const isLowStock = product.stock > 0 && product.stock < 5
   const isInStock = product.stock > 0
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
     addItem({
       id: product.id,
       name: product.name,
+      slug: product.slug,
       price: product.price,
-      image_url: product.images?.[0]?.url || '/placeholder-product.jpg',
-      stock: product.stock
-    })
-
-    toast({
-      title: '✔ Добавено',
-      description: `${product.name} е добавено във вашата количка`,
+      image: product.images?.[0]?.url || product.image_url || '',
+      stock: product.stock,
+      sku: product.sku
     })
   }
 

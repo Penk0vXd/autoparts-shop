@@ -2,9 +2,8 @@
 
 import { motion } from 'framer-motion'
 import { Star, Check, ShieldCheck, Truck, RefreshCw } from 'lucide-react'
-import { useToast } from '@/components/ui/use-toast'
-import { useCartStore } from '@/store/cartStore'
 import type { ProductWithRelations } from '@/types/supabase'
+import { useCartStore } from '@/store/cartStore'
 
 interface ProductInfoProps {
   product: ProductWithRelations
@@ -15,9 +14,8 @@ interface ProductInfoProps {
  * Features pricing, trust signals, stock status, and CTA
  */
 export function ProductInfo({ product }: ProductInfoProps) {
-  const { toast } = useToast()
   const { addItem } = useCartStore()
-
+  
   // Price formatting
   const currentPrice = new Intl.NumberFormat('bg-BG', {
     style: 'currency',
@@ -45,14 +43,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
     addItem({
       id: product.id,
       name: product.name,
+      slug: product.slug,
       price: product.price,
-      image_url: product.images?.[0]?.url || '/placeholder-product.jpg',
-      stock: product.stock
-    })
-
-    toast({
-      title: '✔ Добавено',
-      description: `${product.name} е добавено във вашата количка`,
+      image: product.images?.[0]?.url || product.image_url || '',
+      stock: product.stock,
+      sku: product.sku
     })
   }
 
