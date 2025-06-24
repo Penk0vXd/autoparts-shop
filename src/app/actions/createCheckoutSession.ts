@@ -48,6 +48,7 @@ export async function createCheckoutSession(data: CheckoutSessionData) {
           currency: 'bgn',
           product_data: {
             name: 'Доставка',
+            images: [],
           },
           unit_amount: Math.round(summary.deliveryFee * 100),
         },
@@ -88,7 +89,7 @@ export async function createCheckoutSession(data: CheckoutSessionData) {
 
     if (deliveryInfo.method === 'address' && deliveryInfo.address) {
       shippingAddressCollection = {
-        allowed_countries: ['BG'],
+        allowed_countries: ['BG' as const],
       }
       
       customerAddress = {
@@ -100,12 +101,12 @@ export async function createCheckoutSession(data: CheckoutSessionData) {
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: paymentMethodTypes,
+      payment_method_types: paymentMethodTypes as any,
       line_items: lineItems,
       mode: 'payment',
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cart`,
-      shipping_address_collection: shippingAddressCollection,
+      shipping_address_collection: shippingAddressCollection as any,
       billing_address_collection: 'required',
       discounts,
       metadata: {

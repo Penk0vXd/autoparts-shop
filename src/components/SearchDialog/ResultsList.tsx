@@ -83,7 +83,9 @@ export function ResultsList({ query }: ResultsListProps) {
   }
 
   const highlightMatch = (text: string, query: string) => {
-    if (!query.trim()) return text
+    if (!query.trim()) {
+      return text
+    }
     
     const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
     const parts = text.split(regex)
@@ -119,7 +121,7 @@ export function ResultsList({ query }: ResultsListProps) {
   if (results.length === 0) {
     return (
       <div className="px-5 py-6 text-center text-sm text-muted-foreground">
-        Няма продукти, започващи с "{query}"
+        Няма продукти, започващи с &quot;{query}&quot;
       </div>
     )
   }

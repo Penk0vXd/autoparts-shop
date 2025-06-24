@@ -62,7 +62,18 @@ export async function searchProducts(query: string, limit = 8): Promise<SearchPr
         return await fallbackToOldSearch(trimmedQuery, limit)
       }
 
-      return fullData || []
+      // Transform the data to match SearchProduct interface
+      const transformedData = fullData?.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+        price: item.price,
+        compare_price: item.compare_price,
+        images: item.images,
+        brand: Array.isArray(item.brand) && item.brand.length > 0 ? item.brand[0] : item.brand
+      })) || []
+
+      return transformedData
     }
 
     return []
@@ -101,7 +112,17 @@ async function fallbackToOldSearch(query: string, limit = 8): Promise<SearchProd
         .eq('is_active', true)
 
       if (!selectError) {
-        return fullData || []
+        const transformedData = fullData?.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          slug: item.slug,
+          price: item.price,
+          compare_price: item.compare_price,
+          images: item.images,
+          brand: Array.isArray(item.brand) && item.brand.length > 0 ? item.brand[0] : item.brand
+        })) || []
+
+        return transformedData
       }
     }
   } catch (error) {
@@ -117,7 +138,9 @@ async function fallbackToOldSearch(query: string, limit = 8): Promise<SearchProd
  */
 async function prefixFallbackSearch(query: string, limit = 8): Promise<SearchProduct[]> {
   const tokens = query.split(/\s+/).filter(t => t.trim().length > 0)
-  if (tokens.length === 0) return []
+  if (tokens.length === 0) {
+    return []
+  }
 
   // Create ILIKE conditions for prefix matching only
   const conditions = tokens.map(token => 
@@ -144,5 +167,15 @@ async function prefixFallbackSearch(query: string, limit = 8): Promise<SearchPro
     return []
   }
 
-  return data || []
+  const transformedData = data?.map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    slug: item.slug,
+    price: item.price,
+    compare_price: item.compare_price,
+    images: item.images,
+    brand: Array.isArray(item.brand) && item.brand.length > 0 ? item.brand[0] : item.brand
+  })) || []
+
+  return transformedData
 } 

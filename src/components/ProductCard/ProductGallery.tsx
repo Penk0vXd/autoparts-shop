@@ -29,8 +29,12 @@ export default function ProductGallery({
 
   // Sort images by sort_order, primary first
   const sortedImages = [...images].sort((a, b) => {
-    if (a.is_primary && !b.is_primary) return -1
-    if (!a.is_primary && b.is_primary) return 1
+    if (a.is_primary && !b.is_primary) {
+      return -1
+    }
+    if (!a.is_primary && b.is_primary) {
+      return 1
+    }
     return a.sort_order - b.sort_order
   })
 
@@ -48,7 +52,9 @@ export default function ProductGallery({
 
   // Auto-cycle through images on hover
   useEffect(() => {
-    if (!isHovered || !autoPlay || displayImages.length <= 1) return
+    if (!isHovered || !autoPlay || displayImages.length <= 1) {
+      return
+    }
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % displayImages.length)

@@ -29,7 +29,9 @@ type BrandProductsResponse = {
 }
 
 const getKey = (pageIndex: number, previousPageData: BrandProductsResponse | null, slug: string) => {
-  if (previousPageData && !previousPageData.data.length) return null
+  if (previousPageData && !previousPageData.data.length) {
+    return null
+  }
   return `/api/brands/${slug.toLowerCase()}/products?page=${pageIndex + 1}&limit=${LIMIT}`
 }
 
@@ -41,7 +43,9 @@ export default function BrandPage({ params }: BrandPageProps) {
     (pageIndex, previousPageData) => getKey(pageIndex, previousPageData, params.slug.toLowerCase()),
     async (url) => {
       const res = await fetch(url)
-      if (!res.ok) throw new Error('Failed to fetch')
+      if (!res.ok) {
+        throw new Error('Failed to fetch')
+      }
       return res.json()
     }
   )
@@ -50,10 +54,12 @@ export default function BrandPage({ params }: BrandPageProps) {
   const products = data?.flatMap(page => page.data) || []
   const total = data?.[0]?.pagination.total || 0
   const isLoadingInitialData = !data && !error
-  const isReachingEnd = data?.slice(-1)[0]?.data.length < LIMIT
+  const isReachingEnd = data && data.length > 0 ? data[data.length - 1]?.data.length < LIMIT : false
   
   const loadMore = async () => {
-    if (isLoadingMore || isReachingEnd) return
+    if (isLoadingMore || isReachingEnd) {
+      return
+    }
     setIsLoadingMore(true)
     await setSize(size + 1)
     setIsLoadingMore(false)

@@ -20,8 +20,12 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
 
   // Sort images by sort_order, primary first
   const sortedImages = [...images].sort((a, b) => {
-    if (a.is_primary && !b.is_primary) return -1
-    if (!a.is_primary && b.is_primary) return 1
+    if (a.is_primary && !b.is_primary) {
+      return -1
+    }
+    if (!a.is_primary && b.is_primary) {
+      return 1
+    }
     return a.sort_order - b.sort_order
   })
 

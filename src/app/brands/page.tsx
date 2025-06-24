@@ -32,7 +32,9 @@ export default function BrandsPage() {
   )
 
   const getKey = (pageIndex: number, previousPageData: BrandsResponse | null) => {
-    if (previousPageData && pageIndex + 1 > previousPageData.totalPages) return null
+    if (previousPageData && pageIndex + 1 > previousPageData.totalPages) {
+      return null
+    }
     return `/api/brands?page=${pageIndex + 1}&limit=${LIMIT}&category=${activeCategory}`
   }
   
