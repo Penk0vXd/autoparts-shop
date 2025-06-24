@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getProductBySlug, updateProduct, deleteProduct } from '@/services/productService'
 import { requireServerAuth, isAdmin } from '@/lib/db'
 
+// This route connects to database - make it fully dynamic
+export const dynamic = 'force-dynamic'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { slug: string } }

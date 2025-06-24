@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getProducts } from '@/services/productService'
 import { getBrandBySlug } from '@/services/brandService'
 
+// This route connects to database - make it fully dynamic
+export const dynamic = 'force-dynamic'
+
 const MAX_LIMIT = 48
 
 export async function GET(

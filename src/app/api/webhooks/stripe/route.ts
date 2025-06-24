@@ -4,6 +4,9 @@ import { supabase } from '@/lib/supabase'
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 
+// This route should be fully dynamic - don't try to statically analyze it
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const headersList = await headers()

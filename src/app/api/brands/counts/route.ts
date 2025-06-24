@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getBrandCounts } from '@/services/brandService'
 
+// This route connects to database - make it fully dynamic
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const counts = await getBrandCounts()

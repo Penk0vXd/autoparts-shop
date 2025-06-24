@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBrands, getBrandsByCategory, getAllBrands, type BrandCategory } from '@/services/brandService'
 
+// This route connects to database - make it fully dynamic
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
