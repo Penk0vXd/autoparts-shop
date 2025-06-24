@@ -4,14 +4,26 @@ const supabaseUrl = process.env.SUPABASE_URL!
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+  if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV) {
+    console.warn('Missing Supabase environment variables')
+  }
+  // Create a dummy client for build time
+  const dummyUrl = 'https://dummy.supabase.co'
+  const dummyKey = 'dummy-key'
+  export const supabase = createClient(dummyUrl, dummyKey)
+} else {
+  export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 // Client-side Supabase client
-export const createClientComponentClient = () => 
-  createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ) 
+export const createClientComponentClient = () => {
+  const publicUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const publicKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  
+  if (!publicUrl || !publicKey) {
+    console.warn('Missing public Supabase environment variables')
+    return createClient('https://dummy.supabase.co', 'dummy-key')
+  }
+  
+  return createClient(publicUrl, publicKey)
+} 
