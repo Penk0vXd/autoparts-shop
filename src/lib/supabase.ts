@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.SUPABASE_URL!
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
 
+// Create Supabase client with fallback for build time
+let supabaseClient
 if (!supabaseUrl || !supabaseAnonKey) {
   if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV) {
     console.warn('Missing Supabase environment variables')
@@ -10,10 +12,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   // Create a dummy client for build time
   const dummyUrl = 'https://dummy.supabase.co'
   const dummyKey = 'dummy-key'
-  export const supabase = createClient(dummyUrl, dummyKey)
+  supabaseClient = createClient(dummyUrl, dummyKey)
 } else {
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
 }
+
+export const supabase = supabaseClient
 
 // Client-side Supabase client
 export const createClientComponentClient = () => {
