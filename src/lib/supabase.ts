@@ -9,9 +9,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   if (process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV) {
     console.warn('Missing Supabase environment variables')
   }
-  // Create a dummy client for build time
-  const dummyUrl = 'https://dummy.supabase.co'
-  const dummyKey = 'dummy-key'
+  // Create a dummy client for build time with realistic URL format
+  const dummyUrl = 'https://dummy-project-id.supabase.co'
+  const dummyKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1bW15LXByb2plY3QtaWQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0NjkzNTAwMCwiZXhwIjoxOTYyNTExMDAwfQ.dummy-signature'
   supabaseClient = createClient(dummyUrl, dummyKey)
 } else {
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
@@ -26,7 +26,10 @@ export const createClientComponentClient = () => {
   
   if (!publicUrl || !publicKey) {
     console.warn('Missing public Supabase environment variables')
-    return createClient('https://dummy.supabase.co', 'dummy-key')
+    // Return dummy client for client-side builds
+    const dummyUrl = 'https://dummy-project-id.supabase.co'
+    const dummyKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1bW15LXByb2plY3QtaWQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0NjkzNTAwMCwiZXhwIjoxOTYyNTExMDAwfQ.dummy-signature'
+    return createClient(dummyUrl, dummyKey)
   }
   
   return createClient(publicUrl, publicKey)
