@@ -19,6 +19,7 @@
     "docker:seed": "docker compose --profile seed up db-seed --build"
   },
   "dependencies": {
+    "@heroicons/react": "^2.1.0",
     "@hookform/resolvers": "^5.1.1",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",

@@ -4,26 +4,26 @@ import { supabase } from '@/lib/db';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const brandId = searchParams.get('brandId');
+    const modelId = searchParams.get('modelId');
 
-    if (!brandId) {
+    if (!modelId) {
       return NextResponse.json(
-        { error: 'Brand ID is required' },
+        { error: 'Model ID is required' },
         { status: 400 }
       );
     }
 
     const { data, error } = await supabase
-      .from('vehicle_models')
+      .from('vehicle_years')
       .select('*')
-      .eq('brand_id', brandId)
+      .eq('model_id', modelId)
       .eq('is_active', true)
-      .order('name');
+      .order('year', { ascending: false });
 
     if (error) {
-      console.error('Error fetching vehicle models:', error);
+      console.error('Error fetching vehicle years:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch vehicle models' },
+        { error: 'Failed to fetch vehicle years' },
         { status: 500 }
       );
     }
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       success: true,
       data: data || [],
       count: data?.length || 0,
-      brandId
+      modelId
     });
   } catch (error) {
     console.error('Unexpected error:', error);

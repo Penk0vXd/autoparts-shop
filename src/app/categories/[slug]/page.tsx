@@ -132,7 +132,7 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
       brand
     })
 
-    return (
+  return (
       <div className="min-h-screen bg-white">
         {/* Breadcrumb Navigation */}
         <div className="bg-gray-50 border-b border-gray-200">
@@ -174,28 +174,28 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
                 {/* Category Info */}
                 <div className="flex-1 text-center lg:text-left">
                   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    {category.name}
-                  </h1>
-                  
-                  {category.description && (
+                {category.name}
+              </h1>
+              
+              {category.description && (
                     <p className="text-lg text-gray-600 leading-relaxed mb-6">
-                      {category.description}
-                    </p>
-                  )}
+                  {category.description}
+                </p>
+              )}
 
                   <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center">
                     <div className="flex items-center space-x-2 text-sm text-gray-500">
                       <span className="font-medium">{category.productCount}</span>
                       <span>налични продукта</span>
-                    </div>
-                    
+            </div>
+            
                     <div className="h-4 w-px bg-gray-300 hidden sm:block" />
                     
                     <div className="text-sm text-gray-500">
                       Всички части с гаранция и бърза доставка
                     </div>
-                  </div>
-                </div>
+              </div>
+              </div>
               </div>
             </div>
           </div>
@@ -209,7 +209,7 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-2xl font-bold text-gray-900">
                   Продукти в категория "{category.name}"
-                </h2>
+                  </h2>
                 
                 {/* Sort Options */}
                 <div className="flex items-center space-x-2">
