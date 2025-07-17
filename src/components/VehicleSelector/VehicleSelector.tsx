@@ -1,446 +1,539 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { ChevronDownIcon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { 
-  VehicleSelectorProps, 
-  VehicleSelection, 
-  VehicleMake, 
-  VehicleModel, 
-  VehicleEngine,
-  VehicleDropdownOption 
-} from '@/types/vehicle'
-import { getVehicleMakes, getVehicleModels, getVehicleYears, getVehicleEngines } from '@/services/vehicleService'
-import { cn } from '@/lib/utils'
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
 
-/**
- * VehicleSelector Component
- * 
- * Premium cascading dropdown component for vehicle selection in auto parts catalog.
- * Features Make → Model → Year → Engine progression with real-time filtering.
- */
+// ============================================================================
+// TYPESCRIPT INTERFACES - The Divine Data Structures
+// ============================================================================
+
+interface VehicleBrand {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url?: string;
+  country: string;
+}
+
+interface VehicleModel {
+  id: string;
+  name: string;
+  slug: string;
+  brand_id: string;
+  body_type: string;
+}
+
+interface VehicleYear {
+  id: string;
+  year: number;
+  model_id: string;
+  generation: string;
+}
+
+interface VehicleEngine {
+  id: string;
+  engine_code: string;
+  name: string;
+  type: string;
+  displacement: number;
+  horsepower: number;
+  torque: number;
+  year_id: string;
+}
+
+interface VehicleSelection {
+  brand?: VehicleBrand;
+  model?: VehicleModel;
+  year?: VehicleYear;
+  engine?: VehicleEngine;
+}
+
+interface VehicleSelectorProps {
+  onSelectionComplete?: (selection: VehicleSelection) => void;
+  onSelectionChange?: (selection: VehicleSelection) => void;
+  initialSelection?: VehicleSelection;
+  className?: string;
+}
+
+// ============================================================================
+// SUPABASE CLIENT - The Divine Database Connection
+// ============================================================================
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// ============================================================================
+// VEHICLE SELECTOR COMPONENT - The Wizard of Automotive Dreams
+// ============================================================================
+
 export function VehicleSelector({
+  onSelectionComplete,
   onSelectionChange,
-  initialSelection = {},
-  showEngineSelector = true,
-  showClearButton = true,
-  className,
-  size = 'md',
-  placeholder = {}
+  initialSelection,
+  className = ''
 }: VehicleSelectorProps) {
-  // State for current selection
-  const [selection, setSelection] = useState<VehicleSelection>(initialSelection)
   
-  // State for dropdown options
-  const [makes, setMakes] = useState<VehicleMake[]>([])
-  const [models, setModels] = useState<VehicleModel[]>([])
-  const [years, setYears] = useState<number[]>([])
-  const [engines, setEngines] = useState<VehicleEngine[]>([])
+  // State Management - The Heart of the Wizard
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selection, setSelection] = useState<VehicleSelection>(initialSelection || {});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Loading states
-  const [loading, setLoading] = useState({
-    makes: false,
-    models: false,
-    years: false,
-    engines: false
-  })
-  
-  // Error states
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  // Data State - The Repositories of Knowledge
+  const [brands, setBrands] = useState<VehicleBrand[]>([]);
+  const [models, setModels] = useState<VehicleModel[]>([]);
+  const [years, setYears] = useState<VehicleYear[]>([]);
+  const [engines, setEngines] = useState<VehicleEngine[]>([]);
 
-  // Size-based styling
-  const sizeClasses = {
-    sm: 'text-sm py-2 px-3',
-    md: 'text-base py-3 px-4',
-    lg: 'text-lg py-4 px-5'
-  }
+  // ============================================================================
+  // DATA FETCHING FUNCTIONS - The Divine Queries
+  // ============================================================================
 
-  /**
-   * Load vehicle makes on component mount
-   */
-  useEffect(() => {
-    loadMakes()
-  }, [])
-
-  /**
-   * Load models when make changes
-   */
-  useEffect(() => {
-    if (selection.make) {
-      loadModels(selection.make.id)
-    } else {
-      setModels([])
-      setSelection(prev => ({ ...prev, model: undefined, year: undefined, engine: undefined }))
-    }
-  }, [selection.make])
-
-  /**
-   * Load years when model changes
-   */
-  useEffect(() => {
-    if (selection.model) {
-      loadYears(selection.model.id)
-    } else {
-      setYears([])
-      setSelection(prev => ({ ...prev, year: undefined, engine: undefined }))
-    }
-  }, [selection.model])
-
-  /**
-   * Load engines when year changes
-   */
-  useEffect(() => {
-    if (selection.model && selection.year && showEngineSelector) {
-      loadEngines(selection.model.id, selection.year)
-    } else {
-      setEngines([])
-      setSelection(prev => ({ ...prev, engine: undefined }))
-    }
-  }, [selection.model, selection.year, showEngineSelector])
-
-  /**
-   * Notify parent component of selection changes
-   */
-  useEffect(() => {
-    if (onSelectionChange) {
-      onSelectionChange(selection)
-    }
-  }, [selection, onSelectionChange])
-
-  /**
-   * Load available makes
-   */
-  const loadMakes = async () => {
+  const fetchBrands = async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setLoading(prev => ({ ...prev, makes: true }))
-      setErrors(prev => ({ ...prev, makes: '' }))
+      const { data, error } = await supabase
+        .from('vehicle_brands')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
       
-      const makesData = await getVehicleMakes()
-      setMakes(makesData)
-    } catch (error) {
-      setErrors(prev => ({ ...prev, makes: 'Failed to load vehicle makes' }))
+      if (error) throw error;
+      setBrands(data || []);
+    } catch (err) {
+      setError('Грешка при зареждане на марките. Моля, опитайте отново.');
+      console.error('Error fetching brands:', err);
     } finally {
-      setLoading(prev => ({ ...prev, makes: false }))
+      setIsLoading(false);
     }
-  }
+  };
 
-  /**
-   * Load models for selected make
-   */
-  const loadModels = async (makeId: string) => {
+  const fetchModels = async (brandId: string) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setLoading(prev => ({ ...prev, models: true }))
-      setErrors(prev => ({ ...prev, models: '' }))
+      const { data, error } = await supabase
+        .from('vehicle_models')
+        .select('*')
+        .eq('brand_id', brandId)
+        .eq('is_active', true)
+        .order('name');
       
-      const modelsData = await getVehicleModels(makeId)
-      setModels(modelsData)
-    } catch (error) {
-      setErrors(prev => ({ ...prev, models: 'Failed to load vehicle models' }))
+      if (error) throw error;
+      setModels(data || []);
+    } catch (err) {
+      setError('Грешка при зареждане на моделите. Моля, опитайте отново.');
+      console.error('Error fetching models:', err);
     } finally {
-      setLoading(prev => ({ ...prev, models: false }))
+      setIsLoading(false);
     }
-  }
+  };
 
-  /**
-   * Load years for selected model
-   */
-  const loadYears = async (modelId: string) => {
+  const fetchYears = async (modelId: string) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setLoading(prev => ({ ...prev, years: true }))
-      setErrors(prev => ({ ...prev, years: '' }))
+      const { data, error } = await supabase
+        .from('vehicle_years')
+        .select('*')
+        .eq('model_id', modelId)
+        .eq('is_active', true)
+        .order('year', { ascending: false });
       
-      const yearsData = await getVehicleYears(modelId)
-      setYears(yearsData)
-    } catch (error) {
-      setErrors(prev => ({ ...prev, years: 'Failed to load vehicle years' }))
+      if (error) throw error;
+      setYears(data || []);
+    } catch (err) {
+      setError('Грешка при зареждане на годините. Моля, опитайте отново.');
+      console.error('Error fetching years:', err);
     } finally {
-      setLoading(prev => ({ ...prev, years: false }))
+      setIsLoading(false);
     }
-  }
+  };
 
-  /**
-   * Load engines for selected model and year
-   */
-  const loadEngines = async (modelId: string, year: number) => {
+  const fetchEngines = async (yearId: string) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setLoading(prev => ({ ...prev, engines: true }))
-      setErrors(prev => ({ ...prev, engines: '' }))
+      const { data, error } = await supabase
+        .from('vehicle_engines')
+        .select('*')
+        .eq('year_id', yearId)
+        .eq('is_active', true)
+        .order('horsepower', { ascending: false });
       
-      const enginesData = await getVehicleEngines(modelId, year)
-      setEngines(enginesData)
-    } catch (error) {
-      setErrors(prev => ({ ...prev, engines: 'Failed to load vehicle engines' }))
+      if (error) throw error;
+      setEngines(data || []);
+    } catch (err) {
+      setError('Грешка при зареждане на двигателите. Моля, опитайте отново.');
+      console.error('Error fetching engines:', err);
     } finally {
-      setLoading(prev => ({ ...prev, engines: false }))
+      setIsLoading(false);
     }
-  }
+  };
 
-  /**
-   * Handle make selection
-   */
-  const handleMakeChange = useCallback((makeId: string) => {
-    const selectedMake = makes.find(make => make.id === makeId)
-    setSelection(prev => ({
-      make: selectedMake,
-      model: undefined,
-      year: undefined,
-      engine: undefined
-    }))
-  }, [makes])
+  // ============================================================================
+  // SELECTION HANDLERS - The Divine Actions
+  // ============================================================================
 
-  /**
-   * Handle model selection
-   */
-  const handleModelChange = useCallback((modelId: string) => {
-    const selectedModel = models.find(model => model.id === modelId)
-    setSelection(prev => ({
-      ...prev,
-      model: selectedModel,
-      year: undefined,
-      engine: undefined
-    }))
-  }, [models])
+  const handleBrandSelect = (brand: VehicleBrand) => {
+    const newSelection = { 
+      brand, 
+      model: undefined, 
+      year: undefined, 
+      engine: undefined 
+    };
+    setSelection(newSelection);
+    setCurrentStep(2);
+    fetchModels(brand.id);
+    onSelectionChange?.(newSelection);
+  };
 
-  /**
-   * Handle year selection
-   */
-  const handleYearChange = useCallback((year: string) => {
-    const selectedYear = parseInt(year)
-    setSelection(prev => ({
-      ...prev,
-      year: selectedYear,
-      engine: undefined
-    }))
-  }, [])
+  const handleModelSelect = (model: VehicleModel) => {
+    const newSelection = { 
+      ...selection, 
+      model, 
+      year: undefined, 
+      engine: undefined 
+    };
+    setSelection(newSelection);
+    setCurrentStep(3);
+    fetchYears(model.id);
+    onSelectionChange?.(newSelection);
+  };
 
-  /**
-   * Handle engine selection
-   */
-  const handleEngineChange = useCallback((engineId: string) => {
-    const selectedEngine = engines.find(engine => engine.id === engineId)
-    setSelection(prev => ({
-      ...prev,
-      engine: selectedEngine
-    }))
-  }, [engines])
+  const handleYearSelect = (year: VehicleYear) => {
+    const newSelection = { 
+      ...selection, 
+      year, 
+      engine: undefined 
+    };
+    setSelection(newSelection);
+    setCurrentStep(4);
+    fetchEngines(year.id);
+    onSelectionChange?.(newSelection);
+  };
 
-  /**
-   * Clear all selections
-   */
-  const handleClear = useCallback(() => {
-    setSelection({})
-    setModels([])
-    setYears([])
-    setEngines([])
-  }, [])
+  const handleEngineSelect = (engine: VehicleEngine) => {
+    const newSelection = { 
+      ...selection, 
+      engine 
+    };
+    setSelection(newSelection);
+    onSelectionComplete?.(newSelection);
+    onSelectionChange?.(newSelection);
+  };
 
-  /**
-   * Generate dropdown options for years
-   */
-  const yearOptions = useMemo(() => {
-    return years.map(year => ({
-      value: year.toString(),
-      label: year.toString()
-    }))
-  }, [years])
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
-  /**
-   * Check if selection is complete
-   */
-  const isSelectionComplete = useMemo(() => {
-    const hasBasicSelection = selection.make && selection.model && selection.year
-    return showEngineSelector ? hasBasicSelection && selection.engine : hasBasicSelection
-  }, [selection, showEngineSelector])
+  const handleReset = () => {
+    setSelection({});
+    setCurrentStep(1);
+    setBrands([]);
+    setModels([]);
+    setYears([]);
+    setEngines([]);
+    setError(null);
+  };
 
-  return (
-    <div className={cn('space-y-4', className)}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-          <h3 className="text-lg font-semibold text-gray-900">
-            Изберете автомобил
-          </h3>
-        </div>
-        
-        {showClearButton && (selection.make || selection.model || selection.year || selection.engine) && (
-          <button
-            onClick={handleClear}
-            className="flex items-center gap-1 px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <XMarkIcon className="h-4 w-4" />
-            Изчисти
-          </button>
-        )}
-      </div>
+  // ============================================================================
+  // EFFECTS - The Divine Initialization
+  // ============================================================================
 
-      {/* Dropdown Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Make Selector */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Марка
-          </label>
-          <div className="relative">
-            <select
-              value={selection.make?.id || ''}
-              onChange={(e) => handleMakeChange(e.target.value)}
-              disabled={loading.makes}
-              className={cn(
-                'w-full appearance-none rounded-lg border border-gray-300 bg-white pr-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors',
-                sizeClasses[size],
-                loading.makes && 'opacity-50 cursor-not-allowed',
-                errors.makes && 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-              )}
-            >
-              <option value="">
-                {loading.makes ? 'Зареждане...' : placeholder.make || 'Изберете марка'}
-              </option>
-              {makes.map((make) => (
-                <option key={make.id} value={make.id}>
-                  {make.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
-          {errors.makes && (
-            <p className="text-sm text-red-600">{errors.makes}</p>
-          )}
-        </div>
+  useEffect(() => {
+    fetchBrands();
+  }, []);
 
-        {/* Model Selector */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Модел
-          </label>
-          <div className="relative">
-            <select
-              value={selection.model?.id || ''}
-              onChange={(e) => handleModelChange(e.target.value)}
-              disabled={!selection.make || loading.models}
-              className={cn(
-                'w-full appearance-none rounded-lg border border-gray-300 bg-white pr-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors',
-                sizeClasses[size],
-                (!selection.make || loading.models) && 'opacity-50 cursor-not-allowed',
-                errors.models && 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-              )}
-            >
-              <option value="">
-                {!selection.make
-                  ? 'Първо изберете марка'
-                  : loading.models
-                  ? 'Зареждане...'
-                  : placeholder.model || 'Изберете модел'
+  // ============================================================================
+  // RENDER FUNCTIONS - The Divine UI Elements
+  // ============================================================================
+
+  const renderProgressBar = () => {
+    const steps = ['Марка', 'Модел', 'Година', 'Двигател'];
+    
+    return (
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          {steps.map((step, index) => (
+            <div key={step} className="flex items-center">
+              <div className={`
+                w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+                ${index + 1 <= currentStep 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-400'
                 }
-              </option>
-              {models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
-          {errors.models && (
-            <p className="text-sm text-red-600">{errors.models}</p>
-          )}
-        </div>
-
-        {/* Year Selector */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Година
-          </label>
-          <div className="relative">
-            <select
-              value={selection.year?.toString() || ''}
-              onChange={(e) => handleYearChange(e.target.value)}
-              disabled={!selection.model || loading.years}
-              className={cn(
-                'w-full appearance-none rounded-lg border border-gray-300 bg-white pr-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors',
-                sizeClasses[size],
-                (!selection.model || loading.years) && 'opacity-50 cursor-not-allowed',
-                errors.years && 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-              )}
-            >
-              <option value="">
-                {!selection.model
-                  ? 'Първо изберете модел'
-                  : loading.years
-                  ? 'Зареждане...'
-                  : placeholder.year || 'Изберете година'
+              `}>
+                {index + 1}
+              </div>
+              <span className={`
+                ml-2 text-sm font-medium
+                ${index + 1 <= currentStep 
+                  ? 'text-blue-600' 
+                  : 'text-gray-400'
                 }
-              </option>
-              {yearOptions.map((year) => (
-                <option key={year.value} value={year.value}>
-                  {year.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
-          {errors.years && (
-            <p className="text-sm text-red-600">{errors.years}</p>
-          )}
-        </div>
-
-        {/* Engine Selector (Optional) */}
-        {showEngineSelector && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Двигател
-            </label>
-            <div className="relative">
-              <select
-                value={selection.engine?.id || ''}
-                onChange={(e) => handleEngineChange(e.target.value)}
-                disabled={!selection.year || loading.engines}
-                className={cn(
-                  'w-full appearance-none rounded-lg border border-gray-300 bg-white pr-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors',
-                  sizeClasses[size],
-                  (!selection.year || loading.engines) && 'opacity-50 cursor-not-allowed',
-                  errors.engines && 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                )}
-              >
-                <option value="">
-                  {!selection.year
-                    ? 'Първо изберете година'
-                    : loading.engines
-                    ? 'Зареждане...'
-                    : placeholder.engine || 'Изберете двигател'
+              `}>
+                {step}
+              </span>
+              {index < steps.length - 1 && (
+                <div className={`
+                  w-full h-0.5 mx-4
+                  ${index + 1 < currentStep 
+                    ? 'bg-blue-600' 
+                    : 'bg-gray-200'
                   }
-                </option>
-                {engines.map((engine) => (
-                  <option key={engine.id} value={engine.id}>
-                    {engine.name} ({engine.displacement}L, {engine.power}HP)
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                `} />
+              )}
             </div>
-            {errors.engines && (
-              <p className="text-sm text-red-600">{errors.engines}</p>
-            )}
-          </div>
-        )}
+          ))}
+        </div>
       </div>
+    );
+  };
 
-      {/* Selection Summary */}
-      {isSelectionComplete && (
-        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-            <h4 className="text-sm font-medium text-green-800">
-              Избран автомобил:
-            </h4>
-          </div>
-          <p className="mt-1 text-sm text-green-700">
-            {selection.make?.name} {selection.model?.name} ({selection.year})
-            {selection.engine && ` - ${selection.engine.name}`}
-          </p>
+  const renderBrandCard = (brand: VehicleBrand) => (
+    <motion.div
+      key={brand.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => handleBrandSelect(brand)}
+    >
+      {brand.logo_url && (
+        <div className="flex justify-center mb-4">
+          <img 
+            src={brand.logo_url} 
+            alt={brand.name}
+            className="w-16 h-16 object-contain"
+          />
         </div>
       )}
+      <h3 className="text-lg font-semibold text-center text-gray-900">
+        {brand.name}
+      </h3>
+      <p className="text-sm text-center text-gray-500 mt-1">
+        {brand.country}
+      </p>
+    </motion.div>
+  );
+
+  const renderModelCard = (model: VehicleModel) => (
+    <motion.div
+      key={model.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => handleModelSelect(model)}
+    >
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        {model.name}
+      </h3>
+      <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+        {model.body_type}
+      </span>
+    </motion.div>
+  );
+
+  const renderYearCard = (year: VehicleYear) => (
+    <motion.div
+      key={year.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => handleYearSelect(year)}
+    >
+      <h3 className="text-2xl font-bold text-gray-900 mb-2">
+        {year.year}
+      </h3>
+      <p className="text-sm text-gray-500">
+        Поколение: {year.generation}
+      </p>
+    </motion.div>
+  );
+
+  const renderEngineCard = (engine: VehicleEngine) => (
+    <motion.div
+      key={engine.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => handleEngineSelect(engine)}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-gray-900">
+          {engine.name}
+        </h3>
+        <span className={`
+          px-2 py-1 rounded text-xs font-medium
+          ${engine.type === 'Petrol' ? 'bg-green-100 text-green-800' : ''}
+          ${engine.type === 'Diesel' ? 'bg-blue-100 text-blue-800' : ''}
+          ${engine.type === 'Hybrid' ? 'bg-yellow-100 text-yellow-800' : ''}
+          ${engine.type === 'Electric' ? 'bg-purple-100 text-purple-800' : ''}
+        `}>
+          {engine.type}
+        </span>
+      </div>
+      
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Мощност:</span>
+          <span className="font-medium">{engine.horsepower} к.с.</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Въртящ момент:</span>
+          <span className="font-medium">{engine.torque} Nm</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">Обем:</span>
+          <span className="font-medium">{engine.displacement}L</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderCurrentStep = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">Зареждане...</span>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 text-red-600 hover:text-red-800 font-medium"
+          >
+            Опитайте отново
+          </button>
+        </div>
+      );
+    }
+
+    const stepContent = {
+      1: {
+        title: 'Изберете марка',
+        subtitle: 'Изберете марката на вашия автомобил',
+        items: brands,
+        renderItem: renderBrandCard
+      },
+      2: {
+        title: 'Изберете модел',
+        subtitle: `Изберете модела на ${selection.brand?.name}`,
+        items: models,
+        renderItem: renderModelCard
+      },
+      3: {
+        title: 'Изберете година',
+        subtitle: `Изберете годината на ${selection.brand?.name} ${selection.model?.name}`,
+        items: years,
+        renderItem: renderYearCard
+      },
+      4: {
+        title: 'Изберете двигател',
+        subtitle: `Изберете двигателя на ${selection.brand?.name} ${selection.model?.name} ${selection.year?.year}`,
+        items: engines,
+        renderItem: renderEngineCard
+      }
+    };
+
+    const current = stepContent[currentStep as keyof typeof stepContent];
+
+    return (
+      <div>
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {current.title}
+          </h2>
+          <p className="text-gray-600">
+            {current.subtitle}
+          </p>
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
+            {current.items.map((item) => current.renderItem(item))}
+          </motion.div>
+        </AnimatePresence>
+
+        {current.items.length === 0 && !isLoading && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">
+              Няма налични {current.title.toLowerCase().replace('изберете ', '')}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // MAIN RENDER - The Divine Interface
+  // ============================================================================
+
+  return (
+    <div className={`max-w-6xl mx-auto p-6 ${className}`}>
+      {renderProgressBar()}
+      
+      {/* Navigation */}
+      <div className="flex justify-between items-center mb-8">
+        <button
+          onClick={handleBack}
+          disabled={currentStep === 1}
+          className={`
+            flex items-center px-4 py-2 rounded-lg font-medium transition-colors
+            ${currentStep === 1 
+              ? 'text-gray-400 cursor-not-allowed' 
+              : 'text-blue-600 hover:bg-blue-50'
+            }
+          `}
+        >
+          <ChevronLeftIcon className="w-5 h-5 mr-2" />
+          Назад
+        </button>
+        
+        <button
+          onClick={handleReset}
+          className="text-gray-500 hover:text-gray-700 font-medium"
+        >
+          Започни отново
+        </button>
+      </div>
+
+      {/* Current Step Content */}
+      {renderCurrentStep()}
     </div>
-  )
-} 
+  );
+}
+
+export default VehicleSelector; 
