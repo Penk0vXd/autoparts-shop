@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+
 import useSWRInfinite from 'swr/infinite'
-import { BrandCard } from '@/components/BrandCard/BrandCard'
+import { BrandCard, type BrandCardProps } from '@/components/BrandCard/BrandCard'
 import { BrandFilterBar } from '@/components/BrandFilterBar/BrandFilterBar'
 import type { Brand } from '@/types/db'
 import type { BrandCategory } from '@/services/brandService'
@@ -20,8 +20,65 @@ type BrandsResponse = {
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
+// Brand data adapter - converts database Brand to BrandCard interface
+const adaptBrandForCard = (brand: Brand): BrandCardProps['brand'] => {
+  // Fallback data for missing fields
+  const brandCountries: Record<string, string> = {
+    'bmw': 'Germany',
+    'mercedes-benz': 'Germany', 
+    'audi': 'Germany',
+    'volkswagen': 'Germany',
+    'toyota': 'Japan',
+    'honda': 'Japan',
+    'ford': 'USA',
+    'chevrolet': 'USA',
+    'nissan': 'Japan',
+    'hyundai': 'South Korea',
+    'kia': 'South Korea',
+    'volvo': 'Sweden',
+    'peugeot': 'France',
+    'renault': 'France',
+    'fiat': 'Italy',
+    'ferrari': 'Italy',
+    'lamborghini': 'Italy',
+    'porsche': 'Germany',
+  };
+
+  const brandFounded: Record<string, number> = {
+    'bmw': 1916,
+    'mercedes-benz': 1926,
+    'audi': 1909,
+    'volkswagen': 1937,
+    'toyota': 1937,
+    'honda': 1948,
+    'ford': 1903,
+    'chevrolet': 1911,
+    'nissan': 1933,
+    'hyundai': 1967,
+    'kia': 1944,
+    'volvo': 1927,
+    'peugeot': 1810,
+    'renault': 1899,
+    'fiat': 1899,
+    'ferrari': 1939,
+    'lamborghini': 1963,
+    'porsche': 1931,
+  };
+
+  return {
+    name: brand.name,
+    slug: brand.slug,
+    country: brandCountries[brand.slug] || 'Unknown',
+    founded: brandFounded[brand.slug] || 1900,
+    description: brand.description || undefined,
+    logoUrl: brand.logo_url || undefined,
+    productCount: Math.floor(Math.random() * 20000) + 1000, // TODO: Get real product count
+    isPopular: ['bmw', 'mercedes-benz', 'toyota', 'honda', 'ford'].includes(brand.slug),
+    isPremium: ['bmw', 'mercedes-benz', 'audi', 'ferrari', 'lamborghini', 'porsche'].includes(brand.slug),
+  };
+};
+
 export default function BrandsPage() {
-  const t = useTranslations()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isIntersecting, setIsIntersecting] = useState(false)
@@ -79,7 +136,7 @@ export default function BrandsPage() {
     <main className="py-16">
       <div className="container mx-auto px-4">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          {t('brands.title')}
+          Марки автомобили
         </h1>
         
         <BrandFilterBar 
@@ -88,7 +145,7 @@ export default function BrandsPage() {
         />
         
         <p className="text-gray-600 mb-8">
-          {t('brands.showing', { current: brands.length, total })}
+          Показани {brands.length} от {total} марки
         </p>
 
         {error && (
@@ -97,9 +154,13 @@ export default function BrandsPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {brands.map((brand) => (
-            <BrandCard key={brand.id} brand={brand} />
+            <BrandCard 
+              key={brand.id} 
+              brand={adaptBrandForCard(brand)}
+              variant="compact"
+            />
           ))}
         </div>
 
@@ -119,7 +180,7 @@ export default function BrandsPage() {
               onClick={() => setSize(size + 1)}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              {t('common.loadMore')}
+              Зареди още
             </button>
           </div>
         )}

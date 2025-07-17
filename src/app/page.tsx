@@ -1,17 +1,69 @@
 'use client'
 
 import { Hero } from '@/components/Hero/Hero'
-import { ProductCard } from '@/components/ProductCard/ProductCard'
+import { ProductCardBG } from '@/components/ProductCard/ProductCardBG'
 import { StatsCards } from '@/components/StatsCards/StatsCards'
+import { MVPVehicleSelector } from '@/components/MVPVehicleSelector'
 import { useTranslations } from 'next-intl'
 import useSWR from 'swr'
 import { fetchProducts, getProductsKey } from '@/services/products'
+import { VehicleProvider } from '@/contexts/VehicleContext'
+import { useState, useEffect } from 'react'
+import { CarSelection as CarSelectionType, CarMake, CarModel } from '@/types/nhtsa'
+import { getNHTSAMakes, getNHTSAModels } from '@/services/nhtsaService'
+import { ProductCardBG as ProductCardBGType } from '@/types/product-card-bg'
+import { bulgarianProductExamples } from '@/data/product-examples-bg'
+
+/**
+ * Transform existing product data to ProductCardBG format
+ */
+function transformToProductCardBG(product: any): ProductCardBGType {
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    brand: product.brand ? {
+      name: product.brand.name,
+      logo: product.brand.logo_url || undefined
+    } : undefined,
+    image: product.images && product.images.length > 0 ? {
+      url: product.images[0].url,
+      alt: product.images[0].alt || product.name,
+      placeholder: product.images[0].placeholder
+    } : undefined,
+    price: {
+      amount: product.price || null,
+      currency: 'BGN' as const,
+      isOnSale: product.is_on_sale || false,
+      originalAmount: product.original_price || null,
+      discountPercent: product.discount_percent || undefined
+    },
+    stock: {
+      isInStock: product.stock_quantity > 0,
+      quantity: product.stock_quantity || 0,
+      status: product.stock_quantity > 10 ? 'in_stock' : 
+              product.stock_quantity > 0 ? 'low_stock' : 'out_of_stock',
+      deliveryText: 'Доставка до 24 часа'
+    },
+    warranty: {
+      included: true,
+      duration: '24 месеца'
+    },
+    category: product.category || product.brand?.category,
+    partNumber: product.part_number || product.sku,
+    isNew: product.is_new || false,
+    isFeatured: product.is_featured || false
+  }
+}
 
 /**
  * Homepage component displaying hero section and featured products
  */
 export default function HomePage() {
   const t = useTranslations('products')
+  const [vehicleSelection, setVehicleSelection] = useState<CarSelectionType>({})
+  const [makes, setMakes] = useState<CarMake[]>([])
+  const [models, setModels] = useState<CarModel[]>([])
   
   // Fetch featured products
   const { data: featuredProducts } = useSWR(
@@ -19,9 +71,50 @@ export default function HomePage() {
     () => fetchProducts({ limit: 8 })
   )
 
+  // Load makes on component mount
+  useEffect(() => {
+    const loadMakes = async () => {
+      try {
+        const makesData = await getNHTSAMakes()
+        setMakes(makesData)
+      } catch (error) {
+        console.error('Error loading makes:', error)
+      }
+    }
+    loadMakes()
+  }, [])
+
+  // Load models when make changes
+  useEffect(() => {
+    const loadModels = async () => {
+      if (vehicleSelection.make) {
+        try {
+          const modelsData = await getNHTSAModels(vehicleSelection.make.id)
+          setModels(modelsData)
+        } catch (error) {
+          console.error('Error loading models:', error)
+        }
+      } else {
+        setModels([])
+      }
+    }
+    loadModels()
+  }, [vehicleSelection.make])
+
+  const handleVehicleSelection = (selection: CarSelectionType) => {
+    setVehicleSelection(selection)
+    // You can add logic here to filter products or navigate to filtered results
+    if (selection.make && selection.model) {
+      console.log('Vehicle selected:', selection)
+      // Future: Navigate to filtered products or update product list
+    }
+  }
+
   return (
     <>
       <Hero />
+      
+      <MVPVehicleSelector />
       
       {/* Stats Section */}
       <div className="container mx-auto px-4">
@@ -39,14 +132,29 @@ export default function HomePage() {
               Открийте най-популярните авточасти, избрани специално за вас
             </p>
           </div>
-
-          {featuredProducts && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.data.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+        
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredProducts && featuredProducts.data.length > 0 ? (
+              featuredProducts.data.map((product) => (
+                <ProductCardBG 
+                  key={product.id} 
+                  product={transformToProductCardBG(product)}
+                  onViewDetails={(product) => window.location.href = `/products/${product.slug}`}
+                  onAddToCart={(product) => console.log('Add to cart:', product)}
+                />
+              ))
+            ) : (
+              // Show example products as fallback
+              bulgarianProductExamples.slice(0, 8).map((product) => (
+                <ProductCardBG 
+                  key={product.id} 
+                  product={product}
+                  onViewDetails={(product) => window.location.href = `/products/${product.slug}`}
+                  onAddToCart={(product) => console.log('Add to cart:', product)}
+                />
+              ))
+            )}
+          </div>
 
           <div className="text-center mt-12">
             <a

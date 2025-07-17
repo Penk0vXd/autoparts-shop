@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+
 import { motion } from 'framer-motion'
 import { TrendingUp, Users, Package } from 'lucide-react'
 
@@ -9,26 +9,24 @@ import { TrendingUp, Users, Package } from 'lucide-react'
  * Modern design with animations, icons, and red theme integration
  */
 export function StatsCards() {
-  const t = useTranslations('stats')
-  
   const stats = [
     {
       value: '10+',
-      label: t('experience'),
+      label: 'Години опит',
       icon: TrendingUp,
       delay: 0,
       gradient: 'from-primary/10 to-primary/5'
     },
     {
       value: '50k+',
-      label: t('customers'),
+      label: 'Доволни клиенти',
       icon: Users,
       delay: 0.1,
       gradient: 'from-secondary/10 to-secondary/5'
     },
     {
       value: '100k+',
-      label: t('parts'),
+      label: 'Части на склад',
       icon: Package,
       delay: 0.2,
       gradient: 'from-accent/10 to-accent/5'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+
 import useSWR from 'swr'
 import type { ProductWithRelations } from '@/types/supabase'
 import { ProductCard } from '@/components/ProductCard/ProductCard'
@@ -14,8 +14,6 @@ type RelatedProductsProps = {
 }
 
 export function RelatedProducts({ productId, categoryId, brandId }: RelatedProductsProps) {
-  const t = useTranslations('products')
-  
   const { data, error } = useSWR<{ success: boolean; data: ProductWithRelations[] }>(
     `/api/products/${productId}/related`,
     fetcher
@@ -29,7 +27,7 @@ export function RelatedProducts({ productId, categoryId, brandId }: RelatedProdu
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
-          {t('relatedProducts')}
+          Подобни продукти
         </h2>
         
         {/* Mobile: Horizontal scroll */}

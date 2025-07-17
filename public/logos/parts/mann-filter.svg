@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <defs>
+    <linearGradient id="mannGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FF6600;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#CC5500;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="200" height="60" fill="white" rx="8"/>
+  
+  <!-- Border -->
+  <rect x="2" y="2" width="196" height="56" fill="none" stroke="#FF6600" stroke-width="2" rx="6"/>
+  
+  <!-- Mann Filter text -->
+  <text x="100" y="32" font-family="Arial, sans-serif" font-size="18" font-weight="bold" 
+        text-anchor="middle" fill="url(#mannGradient)">MANN</text>
+  <text x="100" y="48" font-family="Arial, sans-serif" font-size="16" font-weight="normal" 
+        text-anchor="middle" fill="url(#mannGradient)">FILTER</text>
+</svg> 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+
 import useSWR from 'swr'
 import { ProductCard } from '@/components/ProductCard/ProductCard'
 import { fetchProducts, getProductsKey, type ProductsParams } from '@/services/products'
@@ -10,9 +10,6 @@ import { fetchProducts, getProductsKey, type ProductsParams } from '@/services/p
  * Catalog page displaying products with filtering and pagination
  */
 export default function CatalogPage() {
-  const t = useTranslations('products')
-  const tCommon = useTranslations('common')
-  
   const [filters, setFilters] = useState<ProductsParams>({
     page: 1,
     limit: 12,
@@ -35,7 +32,7 @@ export default function CatalogPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center text-red-600">
-          <p>{tCommon('error')}</p>
+          <p>Възникна грешка</p>
         </div>
       </div>
     )
@@ -45,7 +42,7 @@ export default function CatalogPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          {t('title')}
+          Каталог продукти
         </h1>
         
         {/* Filters */}
@@ -53,7 +50,7 @@ export default function CatalogPage() {
           <div className="flex-1 min-w-64">
             <input
               type="text"
-              placeholder={tCommon('search')}
+              placeholder="Търсене..."
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               onChange={(e) => {
                 const value = e.target.value
@@ -92,7 +89,7 @@ export default function CatalogPage() {
       {isLoading && (
         <div className="text-center py-8">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          <p className="mt-2 text-gray-600">{tCommon('loading')}</p>
+          <p className="mt-2 text-gray-600">Зареждане...</p>
         </div>
       )}
 
@@ -113,7 +110,7 @@ export default function CatalogPage() {
                 disabled={data.pagination.page === 1}
                 className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                {tCommon('previous')}
+                Предишна
               </button>
               
               <span className="px-4 py-2 text-gray-700">
@@ -125,7 +122,7 @@ export default function CatalogPage() {
                 disabled={data.pagination.page === data.pagination.totalPages}
                 className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                {tCommon('next')}
+                Следваща
               </button>
             </div>
           )}

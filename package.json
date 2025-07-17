@@ -12,6 +12,8 @@
     "test:watch": "jest --watch",
     "db:seed": "tsx seed.ts",
     "db:reset": "npm run db:seed",
+    "add-product": "tsx add-product.ts",
+    "download-logos": "node scripts/download-car-logos.js",
     "docker:build": "docker build -t auto-parts-store .",
     "docker:run": "docker run -p 3000:3000 auto-parts-store",
     "docker:seed": "docker compose --profile seed up db-seed --build"
@@ -21,6 +23,7 @@
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/supabase-js": "^2.50.0",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.16.0",

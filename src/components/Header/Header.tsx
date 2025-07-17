@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSelectedLayoutSegment } from 'next/navigation'
-import { Menu, Search, ShoppingCart, X } from 'lucide-react'
+import { Menu, Search, ShoppingCart, X, Car, Zap } from 'lucide-react'
 import { MAIN_NAV } from '@/config/main-nav'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -15,17 +15,30 @@ import { OrderDrawer } from '@/components/OrderDrawer/OrderDrawer'
 import { useHydration } from '@/hooks/useHydration'
 
 /**
- * Main application header with responsive navigation
- * Features sticky positioning, mobile sheet menu, and user auth integration
+ * Main application header with responsive navigation and vehicle selector
+ * Features sticky positioning, mobile sheet menu, vehicle display, and enhanced search
  */
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const hydrated = useHydration()
   const selectedSegment = useSelectedLayoutSegment()
-  const { open: openSearch } = useSearchStore()
+  const { open: openSearch, vehicleInfo, setVehicleInfo } = useSearchStore()
   const { getTotalItems, isDrawerOpen, openDrawer, closeDrawer } = useCartStore()
   
   const cartItemsCount = hydrated ? getTotalItems() : 0
+
+  // Keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        openSearch()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [openSearch])
 
   const isActiveLink = (href: string) => {
     const segment = href.replace('/', '')
@@ -42,6 +55,26 @@ export function Header() {
           </div>
           <span className="font-bold text-lg hidden sm:inline-block">Авточасти</span>
         </Link>
+
+        {/* Vehicle Selector - Desktop */}
+        {hydrated && vehicleInfo && (
+          <div className="hidden md:flex items-center space-x-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-1.5">
+            <Car className="w-4 h-4 text-primary" />
+            <div className="text-sm">
+              <span className="font-medium text-primary">
+                {vehicleInfo.make} {vehicleInfo.model}
+                {vehicleInfo.year && ` (${vehicleInfo.year})`}
+              </span>
+            </div>
+            <button
+              onClick={() => setVehicleInfo(null)}
+              className="text-xs text-muted-foreground hover:text-foreground ml-2"
+              aria-label="Премахни избран автомобил"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center space-x-1">
@@ -92,6 +125,33 @@ export function Header() {
                 </Button>
               </div>
 
+              {/* Mobile Vehicle Selector */}
+              {hydrated && vehicleInfo && (
+                <div className="mb-6 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Car className="w-4 h-4 text-primary" />
+                      <div className="text-sm">
+                        <div className="font-medium text-primary">
+                          {vehicleInfo.make} {vehicleInfo.model}
+                        </div>
+                        {vehicleInfo.year && (
+                          <div className="text-xs text-muted-foreground">
+                            {vehicleInfo.year} година
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setVehicleInfo(null)}
+                      className="text-sm text-red-600 hover:text-red-700"
+                    >
+                      Премахни
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <nav className="flex flex-col space-y-4">
                 {MAIN_NAV.map((item) => (
                   <Link
@@ -107,19 +167,33 @@ export function Header() {
                     {item.label}
                   </Link>
                 ))}
-                
-
               </nav>
             </SheetContent>
           </Sheet>
 
-          {/* Search Button */}
+          {/* Enhanced Search Button */}
+          <Button
+            variant="ghost"
+            onClick={openSearch}
+            aria-label="Търсене (Ctrl+K)"
+            className="relative h-9 px-3 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border hidden sm:flex items-center space-x-2 min-w-[200px] justify-start"
+          >
+            <Search className="h-4 w-4" />
+            <span className="text-sm text-muted-foreground">Търси авточасти...</span>
+            <div className="ml-auto flex items-center space-x-0.5">
+              <kbd className="inline-flex h-5 max-h-full items-center rounded border border-border px-1 font-mono text-[10px] font-medium text-muted-foreground">
+                Ctrl+K
+              </kbd>
+            </div>
+          </Button>
+
+          {/* Mobile Search Button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={openSearch}
-            aria-label="Търсене (Ctrl+K)"
-            className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
+            aria-label="Търсене"
+            className="relative h-9 w-9 text-muted-foreground hover:text-foreground sm:hidden"
           >
             <Search className="h-5 w-5" />
           </Button>
@@ -135,7 +209,7 @@ export function Header() {
             <CartIcon />
           </Button>
 
-          {/* User Dropdown - Replace with Makerkit UserDropdown */}
+          {/* User Dropdown */}
           <Button
             variant="ghost"
             size="icon"

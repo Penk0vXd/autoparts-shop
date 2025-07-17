@@ -76,7 +76,11 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require("tailwindcss-animate"),
+    // @tailwindcss/line-clamp is now included by default in Tailwind CSS v3.3+
+    // require('@tailwindcss/line-clamp'),
+  ],
   safelist: ['blur-3xl', 'min-h-screen', 'pt-16', 'scale-90', 'sm:scale-100'],
 }
 export default config 

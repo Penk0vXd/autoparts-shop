@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+
 import useSWR from 'swr'
 import { cn } from '@/lib/utils'
 import type { BrandCounts, BrandCategory } from '@/services/brandService'
@@ -13,17 +13,15 @@ type FilterBarProps = {
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 export function BrandFilterBar({ activeCategory, onCategoryChange }: FilterBarProps) {
-  const t = useTranslations()
-  
   const { data: counts, error } = useSWR<BrandCounts>('/api/brands/counts', fetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false
   })
 
   const filters = [
-    { cat: 'car' as BrandCategory, label: t('brands.filters.cars') },
-    { cat: 'accessory' as BrandCategory, label: t('brands.filters.accessories') },
-    { cat: 'parts' as BrandCategory, label: t('brands.filters.parts') }
+    { cat: 'car' as BrandCategory, label: 'Автомобили' },
+    { cat: 'accessory' as BrandCategory, label: 'Аксесоари' },
+    { cat: 'parts' as BrandCategory, label: 'Части' }
   ]
 
   if (error) {

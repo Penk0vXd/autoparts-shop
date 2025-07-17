@@ -8,6 +8,34 @@ import type {
   Category 
 } from '@/types/supabase'
 
+/**
+ * Validates if a product has valid data for display
+ */
+function isValidProduct(product: ProductWithRelations): boolean {
+  // Basic validation
+  if (!product.name || !product.id) return false
+  
+  // Price validation - allow null/undefined prices (will show "Цена при запитване")
+  // but reject clearly invalid negative prices
+  if (product.price !== null && product.price !== undefined) {
+    if (product.price < 0) return false
+  }
+  
+  // Stock validation - allow any stock value including 0
+  if (product.stock !== null && product.stock !== undefined) {
+    if (product.stock < 0) return false
+  }
+  
+  return true
+}
+
+/**
+ * Filters and cleans product data
+ */
+function filterValidProducts(products: ProductWithRelations[]): ProductWithRelations[] {
+  return products.filter(isValidProduct)
+}
+
 export type ProductFilters = {
   category?: string
   brand?: string
@@ -41,21 +69,18 @@ export async function getProducts(
     let query = supabase
       .from('products')
       .select(`
-        *,
-        brand:brands!inner(*),
-        category:categories(*),
-        images:product_images(*)
+        *
       `, { count: 'exact' })
       .eq('is_active', true)
       .eq('is_deleted', false)
 
     // Apply filters
     if (filters.category) {
-      query = query.eq('categories.slug', filters.category)
+      query = query.eq('category_id', filters.category)
     }
     
     if (filters.brand) {
-      query = query.eq('brand.slug', filters.brand.toLowerCase())
+      query = query.eq('brand_id', filters.brand)
     }
     
     if (filters.minPrice) {
@@ -92,8 +117,11 @@ export async function getProducts(
 
     const totalPages = Math.ceil((count || 0) / pagination.limit)
 
+    // Filter out invalid products
+    const validProducts = filterValidProducts(data as ProductWithRelations[] || [])
+    
     return {
-      products: data as ProductWithRelations[] || [],
+      products: validProducts,
       total: count || 0,
       page: pagination.page,
       totalPages,
@@ -112,10 +140,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithRelatio
     const { data, error } = await supabase
       .from('products')
       .select(`
-        *,
-        brand:brands(*),
-        category:categories(*),
-        images:product_images(*)
+        *
       `)
       .eq('slug', slug)
       .eq('is_active', true)
@@ -129,7 +154,14 @@ export async function getProductBySlug(slug: string): Promise<ProductWithRelatio
       handleDbError(error, 'getProductBySlug')
     }
 
-    return data as ProductWithRelations
+    const product = data as ProductWithRelations
+    
+    // Validate product data
+    if (!isValidProduct(product)) {
+      return null
+    }
+    
+    return product
   } catch (error) {
     handleDbError(error, 'getProductBySlug')
     throw error
@@ -283,10 +315,7 @@ export async function getRelatedProducts(
     const baseQuery = () => supabase
       .from('products')
       .select(`
-        *,
-        brand:brands(*),
-        category:categories(*),
-        images:product_images(*)
+        *
       `)
       .eq('is_active', true)
       .eq('is_deleted', false)
@@ -300,7 +329,7 @@ export async function getRelatedProducts(
         .eq('brand_id', brandId)
       
       if (sameCategoryAndBrand && sameCategoryAndBrand.length >= limit) {
-        return sameCategoryAndBrand as ProductWithRelations[]
+        return filterValidProducts(sameCategoryAndBrand as ProductWithRelations[])
       }
     }
 
@@ -310,7 +339,7 @@ export async function getRelatedProducts(
         .eq('category_id', categoryId)
       
       if (sameCategory && sameCategory.length >= limit) {
-        return sameCategory as ProductWithRelations[]
+        return filterValidProducts(sameCategory as ProductWithRelations[])
       }
     }
 
@@ -320,7 +349,7 @@ export async function getRelatedProducts(
         .eq('brand_id', brandId)
       
       if (sameBrand && sameBrand.length >= limit) {
-        return sameBrand as ProductWithRelations[]
+        return filterValidProducts(sameBrand as ProductWithRelations[])
       }
     }
 
@@ -328,9 +357,65 @@ export async function getRelatedProducts(
     const { data: random } = await baseQuery()
       .order('created_at', { ascending: false })
 
-    return (random || []) as ProductWithRelations[]
+    return filterValidProducts((random || []) as ProductWithRelations[])
   } catch (error) {
     handleDbError(error, 'getRelatedProducts')
+    throw error
+  }
+} 
+
+/**
+ * Get products by category with pagination and sorting
+ */
+export async function getProductsByCategory(
+  categoryId: string,
+  options: {
+    page?: number
+    limit?: number
+    sort?: string
+    brand?: string
+  } = {}
+): Promise<Product[]> {
+  const { page = 1, limit = 24, sort = 'name', brand } = options
+  
+  try {
+    let query = supabase
+      .from('products')
+      .select('*')
+      .eq('category_id', categoryId)
+      .eq('is_active', true)
+      .range((page - 1) * limit, page * limit - 1)
+
+    // Add brand filter if provided
+    if (brand) {
+      query = query.eq('brand_id', brand)
+    }
+
+    // Add sorting
+    switch (sort) {
+      case 'price_asc':
+        query = query.order('price', { ascending: true })
+        break
+      case 'price_desc':
+        query = query.order('price', { ascending: false })
+        break
+      case 'newest':
+        query = query.order('created_at', { ascending: false })
+        break
+      default:
+        query = query.order('name', { ascending: true })
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error fetching products by category:', error)
+      throw new Error('Failed to fetch products')
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error in getProductsByCategory:', error)
     throw error
   }
 } 
