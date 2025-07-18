@@ -96,7 +96,7 @@ export const EXAMPLE_PRODUCT_DATA: ProductCardData[] = [
     brand: {
       id: 'bosch',
       name: 'Bosch',
-      logo: '/logos/bosch.png',
+      logo: '/logos/parts/bosch.svg',
       country: 'Германия',
       website: 'https://www.bosch.com',
       isOriginal: true,
@@ -212,7 +212,7 @@ export const EXAMPLE_PRODUCT_DATA: ProductCardData[] = [
     brand: {
       id: 'mann-filter',
       name: 'MANN-FILTER',
-      logo: '/logos/mann-filter.png',
+      logo: '/logos/parts/mann-filter.svg',
       country: 'Германия',
       isOriginal: true,
       isAftermarket: false,
@@ -320,7 +320,7 @@ export const EXAMPLE_PRODUCT_DATA: ProductCardData[] = [
     brand: {
       id: 'ngk',
       name: 'NGK',
-      logo: '/logos/ngk.png',
+      logo: '/logos/parts/ngk.svg',
       country: 'Япония',
       isOriginal: true,
       isAftermarket: false,
@@ -426,7 +426,7 @@ export const EXAMPLE_PRODUCT_DATA: ProductCardData[] = [
     brand: {
       id: 'mahle',
       name: 'MAHLE',
-      logo: '/logos/mahle.png',
+      logo: '/logos/parts/mahle.svg',
       country: 'Германия',
       isOriginal: true,
       isAftermarket: false,
@@ -542,7 +542,7 @@ export const EXAMPLE_PRODUCT_DATA: ProductCardData[] = [
     brand: {
       id: 'monroe',
       name: 'Monroe',
-      logo: '/logos/monroe.png',
+      logo: '/logos/parts/monroe.svg',
       country: 'Белгия',
       isOriginal: false,
       isAftermarket: true,
@@ -657,7 +657,7 @@ export const EXAMPLE_PRODUCT_DATA: ProductCardData[] = [
     brand: {
       id: 'varta',
       name: 'Varta',
-      logo: '/logos/varta.png',
+      logo: '/logos/parts/varta.svg',
       country: 'Германия',
       isOriginal: true,
       isAftermarket: false,
@@ -754,7 +754,7 @@ export const EXAMPLE_PRODUCT_DATA: ProductCardData[] = [
     brand: {
       id: 'champion',
       name: 'Champion',
-      logo: '/logos/champion.png',
+      logo: '/logos/parts/champion.svg',
       country: 'Франция',
       isOriginal: false,
       isAftermarket: true,
@@ -861,7 +861,7 @@ export const EXAMPLE_PRODUCT_DATA: ProductCardData[] = [
     brand: {
       id: 'sachs',
       name: 'Sachs',
-      logo: '/logos/sachs.png',
+      logo: '/logos/parts/sachs.svg',
       country: 'Германия',
       isOriginal: true,
       isAftermarket: false,

@@ -47,7 +47,7 @@ export const mvpProductExamples: MVPProductCardData[] = [
     },
     brand: {
       name: 'Bosch',
-      logo: '/logos/bosch.png'
+      logo: '/logos/parts/bosch.svg'
     },
     isNew: false,
     isOnSale: true
@@ -84,7 +84,7 @@ export const mvpProductExamples: MVPProductCardData[] = [
     },
     brand: {
       name: 'Mann Filter',
-      logo: '/logos/mann-filter.png'
+      logo: '/logos/parts/mann-filter.svg'
     },
     isNew: true,
     isOnSale: false
@@ -123,7 +123,7 @@ export const mvpProductExamples: MVPProductCardData[] = [
     },
     brand: {
       name: 'Hella',
-      logo: '/logos/hella.png'
+      logo: '/logos/parts/hella.svg'
     },
     isNew: false,
     isOnSale: true
@@ -160,7 +160,7 @@ export const mvpProductExamples: MVPProductCardData[] = [
     },
     brand: {
       name: 'Gates',
-      logo: '/logos/gates.png'
+      logo: '/logos/parts/gates.svg'
     },
     isNew: false,
     isOnSale: false
@@ -197,7 +197,7 @@ export const mvpProductExamples: MVPProductCardData[] = [
     },
     brand: {
       name: 'Mahle',
-      logo: '/logos/mahle.png'
+      logo: '/logos/parts/mahle.svg'
     },
     isNew: true,
     isOnSale: false
@@ -234,7 +234,7 @@ export const mvpProductExamples: MVPProductCardData[] = [
     },
     brand: {
       name: 'Monroe',
-      logo: '/logos/monroe.png'
+      logo: '/logos/parts/monroe.svg'
     },
     isNew: false,
     isOnSale: false
@@ -273,7 +273,7 @@ export const mvpProductExamples: MVPProductCardData[] = [
     },
     brand: {
       name: 'Valeo',
-      logo: '/logos/valeo.png'
+      logo: '/logos/parts/valeo.svg'
     },
     isNew: true,
     isOnSale: true
@@ -310,7 +310,7 @@ export const mvpProductExamples: MVPProductCardData[] = [
     },
     brand: {
       name: 'Sachs',
-      logo: '/logos/sachs.png'
+      logo: '/logos/parts/sachs.svg'
     },
     isNew: false,
     isOnSale: false

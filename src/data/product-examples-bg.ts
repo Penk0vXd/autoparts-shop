@@ -20,7 +20,7 @@ export const bulgarianProductExamples: ProductCardBG[] = [
     slug: 'brake-pads-bmw-premium',
     brand: {
       name: 'Bosch',
-      logo: '/logos/bosch.png'
+      logo: '/logos/parts/bosch.svg'
     },
     image: {
       url: '/api/placeholder/400/400?text=BMW+Brake+Pads',
@@ -57,7 +57,7 @@ export const bulgarianProductExamples: ProductCardBG[] = [
     slug: 'oil-filter-rare-part',
     brand: {
       name: 'Mann Filter',
-      logo: '/logos/mann-filter.png'
+      logo: '/logos/parts/mann-filter.svg'
     },
     image: {
       url: '/api/placeholder/400/400?text=Audi+Oil+Filter',
@@ -121,7 +121,7 @@ export const bulgarianProductExamples: ProductCardBG[] = [
     slug: 'headlight-volkswagen-out',
     brand: {
       name: 'Hella',
-      logo: '/logos/hella.png'
+      logo: '/logos/parts/hella.svg'
     },
     image: {
       url: '/api/placeholder/400/400?text=VW+Headlight',
@@ -184,7 +184,7 @@ export const bulgarianProductExamples: ProductCardBG[] = [
     slug: 'radiator-bmw-low-stock',
     brand: {
       name: 'Valeo',
-      logo: '/logos/valeo.png'
+      logo: '/logos/parts/valeo.svg'
     },
     image: {
       url: '/api/placeholder/400/400?text=BMW+Radiator',
@@ -252,7 +252,7 @@ export const bulgarianProductExamples: ProductCardBG[] = [
     slug: 'shock-absorber-audi-premium',
     brand: {
       name: 'Bilstein',
-      logo: '/logos/bilstein.png'
+      logo: '/logos/parts/bilstein.svg'
     },
     image: {
       url: '/api/placeholder/400/400?text=Audi+Shock+Absorber',
