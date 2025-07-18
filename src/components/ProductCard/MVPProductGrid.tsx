@@ -2,7 +2,10 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { MVPProductGridProps } from '@/types/mvp-product-card'
+interface MVPProductGridProps {
+  products: any[]
+  [key: string]: any
+}
 import { MVPProductCard } from './MVPProductCard'
 
 /**

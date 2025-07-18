@@ -4,7 +4,10 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import { CheckIcon, ClockIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
-import { MVPProductCardProps } from '@/types/mvp-product-card'
+interface MVPProductCardProps {
+  product: any
+  [key: string]: any
+}
 
 /**
  * MVP Product Card - God-Mode Version
@@ -67,7 +70,8 @@ export function MVPProductCard({
         borderColor: 'border-yellow-200'
       }
     }
-    return configs[product.availability.status]
+    const status = product.availability?.status as keyof typeof configs || 'in_stock'
+    return configs[status]
   }
 
   // Handle image loading

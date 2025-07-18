@@ -374,7 +374,7 @@ export function CarSelector({
              options={availableModels}
              onSelect={(value) => handleModelChange(value as string)}
              disabled={!selection.make}
-             showSkeleton={isLoading && selection.make && !selection.model}
+             showSkeleton={Boolean(isLoading && selection.make && !selection.model)}
            />
            
            {/* Year Dropdown */}
@@ -385,7 +385,7 @@ export function CarSelector({
              placeholder="Изберете година"
              options={YEARS}
              onSelect={(value) => handleYearChange(value as number)}
-             showSkeleton={isLoading && selection.model && !selection.year}
+             showSkeleton={Boolean(isLoading && selection.model && !selection.year)}
            />
         </div>
         
@@ -488,4 +488,6 @@ export function CarSelector({
       </div>
     </div>
   )
-} 
+}
+
+export default CarSelector 

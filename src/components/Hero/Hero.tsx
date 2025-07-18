@@ -79,10 +79,18 @@ export function Hero({ className = '' }: HeroProps) {
           let newY = particle.y + particle.speedY
           
           // Handle boundary wrapping
-          if (newX > window.innerWidth) newX = 0
-          if (newX < 0) newX = window.innerWidth
-          if (newY > window.innerHeight) newY = 0
-          if (newY < 0) newY = window.innerHeight
+          if (newX > window.innerWidth) {
+            newX = 0
+          }
+          if (newX < 0) {
+            newX = window.innerWidth
+          }
+          if (newY > window.innerHeight) {
+            newY = 0
+          }
+          if (newY < 0) {
+            newY = window.innerHeight
+          }
           
           return {
             ...particle,

@@ -2,14 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
 
-import useSWRInfinite from 'swr/infinite'
-import { BrandCard, type BrandCardProps } from '@/components/BrandCard/BrandCard'
-import { BrandFilterBar } from '@/components/BrandFilterBar/BrandFilterBar'
-import type { Brand } from '@/types/db'
-import type { BrandCategory } from '@/services/brandService'
-
-const LIMIT = Number(process.env.NEXT_PUBLIC_BRAND_PAGE_LIMIT) || 24
+// Simplified brand interface
+interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url?: string;
+  description?: string;
+  category: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 type BrandsResponse = {
   data: Brand[]
@@ -18,128 +25,198 @@ type BrandsResponse = {
   totalPages: number
 }
 
+type BrandCategory = 'car' | 'accessory' | 'parts'
+
+const LIMIT = 24
+
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
-// Brand data adapter - converts database Brand to BrandCard interface
-const adaptBrandForCard = (brand: Brand): BrandCardProps['brand'] => {
-  // Fallback data for missing fields
-  const brandCountries: Record<string, string> = {
-    'bmw': 'Germany',
-    'mercedes-benz': 'Germany', 
-    'audi': 'Germany',
-    'volkswagen': 'Germany',
-    'toyota': 'Japan',
-    'honda': 'Japan',
-    'ford': 'USA',
-    'chevrolet': 'USA',
-    'nissan': 'Japan',
-    'hyundai': 'South Korea',
-    'kia': 'South Korea',
-    'volvo': 'Sweden',
-    'peugeot': 'France',
-    'renault': 'France',
-    'fiat': 'Italy',
-    'ferrari': 'Italy',
-    'lamborghini': 'Italy',
-    'porsche': 'Germany',
+// Simplified brand card component
+function SimpleBrandCard({ brand }: { brand: Brand }) {
+  const countryFlags: Record<string, string> = {
+    'bmw': '🇩🇪',
+    'mercedes-benz': '🇩🇪', 
+    'audi': '🇩🇪',
+    'volkswagen': '🇩🇪',
+    'toyota': '🇯🇵',
+    'honda': '🇯🇵',
+    'ford': '🇺🇸',
+    'chevrolet': '🇺🇸',
+    'nissan': '🇯🇵',
+    'hyundai': '🇰🇷',
+    'kia': '🇰🇷',
+    'volvo': '🇸🇪',
+    'peugeot': '🇫🇷',
+    'renault': '🇫🇷',
+    'fiat': '🇮🇹',
+    'ferrari': '🇮🇹',
+    'lamborghini': '🇮🇹',
+    'porsche': '🇩🇪',
   };
 
-  const brandFounded: Record<string, number> = {
-    'bmw': 1916,
-    'mercedes-benz': 1926,
-    'audi': 1909,
-    'volkswagen': 1937,
-    'toyota': 1937,
-    'honda': 1948,
-    'ford': 1903,
-    'chevrolet': 1911,
-    'nissan': 1933,
-    'hyundai': 1967,
-    'kia': 1944,
-    'volvo': 1927,
-    'peugeot': 1810,
-    'renault': 1899,
-    'fiat': 1899,
-    'ferrari': 1939,
-    'lamborghini': 1963,
-    'porsche': 1931,
-  };
+  const logoUrl = brand.logo_url || `/logos/${brand.slug}.png`;
+  const flag = countryFlags[brand.slug] || '🌍';
 
-  return {
-    name: brand.name,
-    slug: brand.slug,
-    country: brandCountries[brand.slug] || 'Unknown',
-    founded: brandFounded[brand.slug] || 1900,
-    description: brand.description || undefined,
-    logoUrl: brand.logo_url || undefined,
-    productCount: Math.floor(Math.random() * 20000) + 1000, // TODO: Get real product count
-    isPopular: ['bmw', 'mercedes-benz', 'toyota', 'honda', 'ford'].includes(brand.slug),
-    isPremium: ['bmw', 'mercedes-benz', 'audi', 'ferrari', 'lamborghini', 'porsche'].includes(brand.slug),
-  };
-};
+  return (
+    <motion.div
+      whileHover={{ y: -4 }}
+      className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 p-6"
+    >
+      <div className="flex items-center space-x-4 mb-4">
+        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+          <img
+            src={logoUrl}
+            alt={`${brand.name} logo`}
+            className="w-8 h-8 object-contain"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900">{brand.name}</h3>
+          <p className="text-sm text-gray-600">{flag}</p>
+        </div>
+      </div>
+      
+      {brand.description && (
+        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+          {brand.description}
+        </p>
+      )}
+      
+      <Link
+        href={`/brands/${brand.slug}`}
+        className="block w-full bg-blue-600 text-white text-center py-2 rounded-md hover:bg-blue-700 transition-colors"
+      >
+        View Parts
+      </Link>
+    </motion.div>
+  );
+}
+
+// Category filter component
+function CategoryFilter({ 
+  activeCategory, 
+  onCategoryChange 
+}: { 
+  activeCategory: BrandCategory;
+  onCategoryChange: (category: BrandCategory) => void;
+}) {
+  const categories = [
+    { key: 'car' as BrandCategory, label: 'Car Brands', icon: '🚗' },
+    { key: 'accessory' as BrandCategory, label: 'Accessories', icon: '🔧' },
+    { key: 'parts' as BrandCategory, label: 'Parts', icon: '⚙️' },
+  ];
+
+  return (
+    <div className="flex space-x-2 mb-6">
+      {categories.map((category) => (
+        <button
+          key={category.key}
+          onClick={() => onCategoryChange(category.key)}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors ${
+            activeCategory === category.key
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          <span>{category.icon}</span>
+          <span>{category.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function BrandsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isIntersecting, setIsIntersecting] = useState(false)
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
   
   // Get category from URL or default to 'car'
   const [activeCategory, setActiveCategory] = useState<BrandCategory>(
     (searchParams.get('category') as BrandCategory) || 'car'
   )
 
-  const getKey = (pageIndex: number, previousPageData: BrandsResponse | null) => {
-    if (previousPageData && pageIndex + 1 > previousPageData.totalPages) {
-      return null
+  // Fetch brands
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch(
+          `/api/brands?page=${page}&limit=${LIMIT}&category=${activeCategory}`
+        )
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch brands')
+        }
+        
+        const data: BrandsResponse = await response.json()
+        
+        setBrands(data.data || [])
+        setTotal(data.total || 0)
+        setTotalPages(data.totalPages || 0)
+      } catch (err) {
+        console.error('Error fetching brands:', err)
+        setError('Failed to load brands')
+      } finally {
+        setLoading(false)
+      }
     }
-    return `/api/brands?page=${pageIndex + 1}&limit=${LIMIT}&category=${activeCategory}`
-  }
-  
-  const { data, error, size, setSize, mutate } = useSWRInfinite<BrandsResponse>(
-    getKey,
-    fetcher,
-    {
-      revalidateFirstPage: false,
-      persistSize: true
-    }
-  )
+
+    fetchBrands()
+  }, [page, activeCategory])
 
   const handleCategoryChange = (category: BrandCategory) => {
     setActiveCategory(category)
+    setPage(1)
     
     // Update URL
     const params = new URLSearchParams(searchParams.toString())
     params.set('category', category)
     router.push(`/brands?${params.toString()}`)
-    
-    // Reset data and refetch
-    mutate()
   }
 
-  const brands = data ? data.flatMap(page => page.data).filter(Boolean) : []
-  const isLoading = !data && !error
-  const total = data?.[0]?.total || 0
-  const hasMore = data ? data[data.length - 1]?.page < data[data.length - 1]?.totalPages : false
+  if (loading) {
+    return (
+      <main className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </main>
+    )
+  }
 
-  // Debug logging
   if (error) {
-    console.error('Brands API error:', error)
+    return (
+      <main className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800">{error}</p>
+          </div>
+        </div>
+      </main>
+    )
   }
-
-  useEffect(() => {
-    if (isIntersecting && hasMore) {
-      setSize(size + 1)
-    }
-  }, [isIntersecting, hasMore])
 
   return (
     <main className="py-16">
       <div className="container mx-auto px-4">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
           Марки автомобили
         </h1>
         
-        <BrandFilterBar 
+        <CategoryFilter 
           activeCategory={activeCategory} 
           onCategoryChange={handleCategoryChange} 
         />
@@ -148,40 +225,35 @@ export default function BrandsPage() {
           Показани {brands.length} от {total} марки
         </p>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <p className="text-red-800">Error loading brands. Please try again.</p>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {brands.map((brand) => (
-            <BrandCard 
-              key={brand.id} 
-              brand={adaptBrandForCard(brand)}
-              variant="compact"
-            />
+            <SimpleBrandCard key={brand.id} brand={brand} />
           ))}
         </div>
 
-        {isLoading && (
-          <div className="text-center mt-8">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          </div>
-        )}
-
-        {hasMore && !isLoading && (
-          <div 
-            className="mt-12 text-center"
-            onMouseEnter={() => setIsIntersecting(true)}
-            onMouseLeave={() => setIsIntersecting(false)}
-          >
-            <button
-              onClick={() => setSize(size + 1)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Зареди още
-            </button>
+        {totalPages > 1 && (
+          <div className="mt-12 flex justify-center">
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              
+              <span className="px-4 py-2 bg-blue-600 text-white rounded-md">
+                {page} / {totalPages}
+              </span>
+              
+              <button
+                onClick={() => setPage(page + 1)}
+                disabled={page === totalPages}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

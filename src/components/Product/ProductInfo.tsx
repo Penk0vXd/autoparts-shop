@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Star, Check, ShieldCheck, Truck, RefreshCw, Wrench, AlertTriangle, Clock, Phone, Video, Tool } from 'lucide-react'
+import { Star, Check, ShieldCheck, Truck, RefreshCw, Wrench, AlertTriangle, Clock, Phone, Video } from 'lucide-react'
 import type { ProductWithRelations } from '@/types/supabase'
 import { useCartStore } from '@/store/cartStore'
 import { ConsultationBooking } from '@/components/ConsultationBooking/ConsultationBooking'
@@ -207,7 +207,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           {/* Required Tools */}
           <div className="mb-3">
             <h4 className="text-sm font-medium text-blue-900 mb-2 flex items-center space-x-1">
-              <Tool className="w-4 h-4" />
+              <Wrench className="w-4 h-4" />
               <span>Необходими инструменти:</span>
             </h4>
             <div className="flex flex-wrap gap-1">

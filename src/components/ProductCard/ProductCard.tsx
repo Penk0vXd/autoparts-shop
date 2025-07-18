@@ -171,7 +171,7 @@ export const ProductCard = forwardRef<ProductCardRef, ProductCardProps>(({
   // Format price display with bulletproof error handling
   const formatPrice = (price: number | null | undefined, currency: string = 'BGN') => {
     // Handle null, undefined, NaN, or invalid prices
-    if (price == null || isNaN(price) || price < 0) {
+    if (price === null || price === undefined || isNaN(price) || price < 0) {
       return 'Цена при запитване'
     }
     

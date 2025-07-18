@@ -11,7 +11,7 @@ interface CategoryLayoutProps {
  * Generate metadata for category pages
  */
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const category = getCategoryBySlug(params.slug)
+  const category = await getCategoryBySlug(params.slug)
   
   if (!category) {
     return {
@@ -86,9 +86,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 /**
  * Category Layout Component
  */
-export default function CategoryLayout({ children, params }: CategoryLayoutProps) {
+export default async function CategoryLayout({ children, params }: CategoryLayoutProps) {
   // Validate category exists
-  const category = getCategoryBySlug(params.slug)
+  const category = await getCategoryBySlug(params.slug)
   
   if (!category) {
     notFound()

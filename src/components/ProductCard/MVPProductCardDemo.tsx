@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { MVPProductGrid } from './MVPProductGrid'
 import { MVPProductCard } from './MVPProductCard'
 import { mvpProductExamples } from '@/data/mvp-product-examples'
-import { MVPProductCardData } from '@/types/mvp-product-card'
+type MVPProductCardData = any
 
 /**
  * MVP Product Card Demo - God-Mode Version

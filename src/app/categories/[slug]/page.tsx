@@ -208,7 +208,7 @@ async function CategoryContent({ params, searchParams }: CategoryPageProps) {
               {/* Products Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Продукти в категория "{category.name}"
+                  Продукти в категория &quot;{category.name}&quot;
                   </h2>
                 
                 {/* Sort Options */}

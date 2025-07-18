@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { getBrands, getBrandCounts } from '@/services/brandService'
 import { getProducts } from '@/services/productService'
-import { getCategories } from '@/services/categoryService'
+import { getCategories } from '@/services/productService'
 import type { Brand } from '@/types/db'
 import type { ProductWithRelations } from '@/types/supabase'
-import type { Category } from '@/types/category'
+import type { Category } from '@/types/db'
 
 export default function DataPage() {
   const [brands, setBrands] = useState<Brand[]>([])
@@ -236,7 +236,7 @@ export default function DataPage() {
                             <div className="flex-shrink-0 h-10 w-10">
                               <img
                                 className="h-10 w-10 rounded-lg object-cover"
-                                src={product.images[0]}
+                                src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || '/placeholder.png'}
                                 alt={product.name}
                               />
                             </div>

@@ -8,7 +8,7 @@ import {
   ExclamationTriangleIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline'
-import { 
+import type { 
   CarSelection, 
   CarMake, 
   CarModel, 
@@ -341,7 +341,9 @@ export function CarSelection({
     selectedValue?: any,
     renderOption?: (option: any) => React.ReactNode
   ) => {
-    if (openDropdown !== dropdownId) return null
+    if (openDropdown !== dropdownId) {
+      return null
+    }
 
     return (
       <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">

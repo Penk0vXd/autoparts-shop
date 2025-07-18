@@ -76,11 +76,21 @@ export function CategoryFilterPanel({
 
   const getActiveFiltersCount = () => {
     let count = 0
-    if (localFilters.brands.length > 0) count++
-    if (localFilters.priceRange.min !== null || localFilters.priceRange.max !== null) count++
-    if (localFilters.stockStatus !== 'all') count++
-    if (localFilters.isOnSale) count++
-    if (localFilters.isNew) count++
+    if (localFilters.brands.length > 0) {
+      count++
+    }
+    if (localFilters.priceRange.min !== null || localFilters.priceRange.max !== null) {
+      count++
+    }
+    if (localFilters.stockStatus !== 'all') {
+      count++
+    }
+    if (localFilters.isOnSale) {
+      count++
+    }
+    if (localFilters.isNew) {
+      count++
+    }
     return count
   }
 
@@ -96,7 +106,7 @@ export function CategoryFilterPanel({
           <div className="flex items-center space-x-2">
             <FunnelIcon className="h-5 w-5 text-gray-500" />
             <span className="font-medium text-gray-700">
-              {CategoryLocalization.filters.filters}
+              Филтри
             </span>
             {getActiveFiltersCount() > 0 && (
               <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
@@ -115,7 +125,7 @@ export function CategoryFilterPanel({
           <div className="absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-xl">
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold text-gray-900">
-                {CategoryLocalization.filters.filters}
+                Филтри
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
@@ -159,7 +169,7 @@ export function CategoryFilterPanel({
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <FunnelIcon className="h-5 w-5 mr-2 text-gray-500" />
-              {CategoryLocalization.filters.filters}
+              Филтри
             </h2>
             {getActiveFiltersCount() > 0 && (
               <button

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -58,15 +57,6 @@ interface VehicleSelectorProps {
 }
 
 // ============================================================================
-// SUPABASE CLIENT - The Divine Database Connection
-// ============================================================================
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-// ============================================================================
 // VEHICLE SELECTOR COMPONENT - The Wizard of Automotive Dreams
 // ============================================================================
 
@@ -98,14 +88,14 @@ export function VehicleSelector({
     setError(null);
     
     try {
-      const { data, error } = await supabase
-        .from('vehicle_brands')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
+      const response = await fetch('/api/vehicle-selector/brands');
+      const result = await response.json();
       
-      if (error) throw error;
-      setBrands(data || []);
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch brands');
+      }
+      
+      setBrands(result.data || []);
     } catch (err) {
       setError('Грешка при зареждане на марките. Моля, опитайте отново.');
       console.error('Error fetching brands:', err);
@@ -119,15 +109,14 @@ export function VehicleSelector({
     setError(null);
     
     try {
-      const { data, error } = await supabase
-        .from('vehicle_models')
-        .select('*')
-        .eq('brand_id', brandId)
-        .eq('is_active', true)
-        .order('name');
+      const response = await fetch(`/api/vehicle-selector/models?brandId=${brandId}`);
+      const result = await response.json();
       
-      if (error) throw error;
-      setModels(data || []);
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch models');
+      }
+      
+      setModels(result.data || []);
     } catch (err) {
       setError('Грешка при зареждане на моделите. Моля, опитайте отново.');
       console.error('Error fetching models:', err);
@@ -141,15 +130,14 @@ export function VehicleSelector({
     setError(null);
     
     try {
-      const { data, error } = await supabase
-        .from('vehicle_years')
-        .select('*')
-        .eq('model_id', modelId)
-        .eq('is_active', true)
-        .order('year', { ascending: false });
+      const response = await fetch(`/api/vehicle-selector/years?modelId=${modelId}`);
+      const result = await response.json();
       
-      if (error) throw error;
-      setYears(data || []);
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch years');
+      }
+      
+      setYears(result.data || []);
     } catch (err) {
       setError('Грешка при зареждане на годините. Моля, опитайте отново.');
       console.error('Error fetching years:', err);
@@ -163,15 +151,14 @@ export function VehicleSelector({
     setError(null);
     
     try {
-      const { data, error } = await supabase
-        .from('vehicle_engines')
-        .select('*')
-        .eq('year_id', yearId)
-        .eq('is_active', true)
-        .order('horsepower', { ascending: false });
+      const response = await fetch(`/api/vehicle-selector/engines?yearId=${yearId}`);
+      const result = await response.json();
       
-      if (error) throw error;
-      setEngines(data || []);
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch engines');
+      }
+      
+      setEngines(result.data || []);
     } catch (err) {
       setError('Грешка при зареждане на двигателите. Моля, опитайте отново.');
       console.error('Error fetching engines:', err);

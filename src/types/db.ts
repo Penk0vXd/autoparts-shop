@@ -14,9 +14,11 @@ export type Category = {
   id: string;
   name: string;
   slug: string;
-  description?: string;
-  parent_id?: string;
-  image_url?: string;
+  description?: string | null;
+  parent_id?: string | null;
+  image_url?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

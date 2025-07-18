@@ -23,7 +23,7 @@ export { ProductCardBGDemo } from './ProductCardBGDemo'
 
 // Re-export types for convenience
 export type { ProductCardProps, ProductCardData, ProductCardState } from '@/types/product-card'
-export type { MVPProductCardProps, MVPProductCardData, MVPProductGridProps } from '@/types/mvp-product-card'
+// MVP Product Card types are defined locally
 export type { ProductCardBGProps, ProductCardBG as ProductCardBGType } from '@/types/product-card-bg'
 
 // Re-export SafeImage utilities

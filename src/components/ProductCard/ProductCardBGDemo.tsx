@@ -47,7 +47,7 @@ export function ProductCardBGDemo() {
           </h1>
           <p className="text-xl text-gray-600 max-w-4xl mx-auto">
             Production-quality ProductCard за български магазин за авточасти.
-            Никога не показва "NaN лв." - винаги има резервен план.
+            Никога не показва &quot;NaN лв.&quot; - винаги има резервен план.
           </p>
         </div>
 
@@ -91,10 +91,10 @@ export function ProductCardBGDemo() {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h3 className="font-semibold text-green-900 mb-2">✅ Цена Логика</h3>
               <ul className="text-sm text-green-800 space-y-1">
-                <li>• null/undefined → "Цена при запитване"</li>
-                <li>• NaN → "Цена при запитване"</li>
-                <li>• Отрицателна → "Цена при запитване"</li>
-                <li>• Валидна → "199.99 лв."</li>
+                <li>• null/undefined → &quot;Цена при запитване&quot;</li>
+                <li>• NaN → &quot;Цена при запитване&quot;</li>
+                <li>• Отрицателна → &quot;Цена при запитване&quot;</li>
+                <li>• Валидна → &quot;199.99 лв.&quot;</li>
               </ul>
             </div>
             

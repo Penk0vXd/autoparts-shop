@@ -582,7 +582,7 @@ export const MVPVehicleSelector = forwardRef<MVPVehicleSelectorRef, MVPVehicleSe
   const yearOptions: MVPDropdownOption[] = state.availableYears.map(year => ({
     value: year.toString(),
     label: year.toString(),
-    metadata: year
+    metadata: { year }
   }))
   
   return (

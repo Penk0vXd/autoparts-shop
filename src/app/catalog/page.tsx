@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import useSWR from 'swr'
-import { ProductCard } from '@/components/ProductCard/ProductCard'
+import { MVPProductCard } from '@/components/ProductCard/MVPProductCard'
 import { fetchProducts, getProductsKey, type ProductsParams } from '@/services/products'
 
 /**
@@ -98,7 +98,7 @@ export default function CatalogPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {data.data.map((product) => (
-              <ProductCard key={product.id} product={product} />
+                             <MVPProductCard key={product.id} product={product} />
             ))}
           </div>
 

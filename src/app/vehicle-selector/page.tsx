@@ -2,17 +2,17 @@
 
 import { useState } from 'react';
 import VehicleSelector from '@/components/VehicleSelector/VehicleSelector';
-import { VehicleSelection } from '@/components/VehicleSelector/VehicleSelector';
+// Using VehicleSelection from VehicleSelector component
 
 export default function VehicleSelectorDemo() {
-  const [selection, setSelection] = useState<VehicleSelection>({});
-  const [completedSelection, setCompletedSelection] = useState<VehicleSelection | null>(null);
+  const [selection, setSelection] = useState<any>({});
+  const [completedSelection, setCompletedSelection] = useState<any>(null);
 
-  const handleSelectionChange = (newSelection: VehicleSelection) => {
+  const handleSelectionChange = (newSelection: any) => {
     setSelection(newSelection);
   };
 
-  const handleSelectionComplete = (finalSelection: VehicleSelection) => {
+  const handleSelectionComplete = (finalSelection: any) => {
     setCompletedSelection(finalSelection);
   };
 
