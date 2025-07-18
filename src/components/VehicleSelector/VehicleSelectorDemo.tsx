@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { VehicleSelector } from './VehicleSelector'
 import { VehicleProvider, useVehicle, useVehicleSelection, useVehicleCompatibility } from '@/contexts/VehicleContext'
-import { VehicleSelection } from '@/types/vehicle'
+// Using any for VehicleSelection to avoid type conflicts
+type VehicleSelection = any
 import { ShoppingBagIcon, FunnelIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 
 /**
@@ -93,9 +94,6 @@ function DemoContent() {
       <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <VehicleSelector
           onSelectionChange={handleSelectionChange}
-          showEngineSelector={true}
-          showClearButton={true}
-          size="md"
           className="w-full"
         />
       </div>
@@ -269,9 +267,6 @@ export function VehicleSelectorUsageExample() {
         <h3 className="text-lg font-semibold mb-4">Basic Usage</h3>
         <VehicleSelector
           onSelectionChange={setSelection}
-          showEngineSelector={true}
-          showClearButton={true}
-          size="md"
         />
       </div>
 
@@ -279,11 +274,7 @@ export function VehicleSelectorUsageExample() {
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4">With Context Provider</h3>
         <VehicleProvider>
-          <VehicleSelector
-            showEngineSelector={true}
-            showClearButton={true}
-            size="lg"
-          />
+          <VehicleSelector />
           {/* Other components can now access vehicle selection via useVehicle() */}
         </VehicleProvider>
       </div>

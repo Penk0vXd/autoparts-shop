@@ -39,9 +39,13 @@ next-env.d.ts
 .idea/
 *.swp
 *.swo
+.vim/
+*.sublime-*
 
 # OS
 Thumbs.db
+.DS_Store
+*~
 
 # Docker
 docker-compose.override.yml
@@ -104,4 +108,44 @@ jspm_packages/
 .dynamodb/
 
 # TernJS port file
-.tern-port 
+.tern-port
+
+# Supabase
+/supabase/.temp/
+/supabase/logs/
+
+# Additional cache directories
+.turbo
+.swc
+.eslintcache
+
+# Generated files
+dist/
+build/
+*.generated.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Editor backups
+*~
+*.bak
+*.swp
+*.swo
+
+# Package manager files
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# Generated SQL migrations (keep schema files)
+**/migrations/*.sql
+
+# Local development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local 

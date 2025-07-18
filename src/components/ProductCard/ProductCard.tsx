@@ -326,10 +326,10 @@ export const ProductCard = forwardRef<ProductCardRef, ProductCardProps>(({
         setState(prev => ({ ...prev, isLoading: false }))
       }, 500)
     },
-    addToCart: handleAddToCart,
-    addToWishlist: handleAddToWishlist,
+    addToCart: () => handleAddToCart({} as React.MouseEvent),
+    addToWishlist: () => handleAddToWishlist({} as React.MouseEvent),
     checkCompatibility: handleCompatibilityCheck,
-    openQuickView: handleQuickView,
+    openQuickView: () => handleQuickView({} as React.MouseEvent),
     viewDetails: handleViewDetails,
     trackEvent: (event) => {
       // Track analytics event

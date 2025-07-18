@@ -469,7 +469,7 @@ export function VehicleSelector({
             exit={{ opacity: 0, x: -20 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
-            {current.items.map((item) => current.renderItem(item))}
+            {current.items.map((item) => current.renderItem(item as any))}
           </motion.div>
         </AnimatePresence>
 

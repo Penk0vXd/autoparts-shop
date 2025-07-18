@@ -3,7 +3,7 @@
 
 import useSWR from 'swr'
 import type { ProductWithRelations } from '@/types/supabase'
-import { ProductCard } from '@/components/ProductCard/ProductCard'
+import { MVPProductCard } from '@/components/ProductCard/MVPProductCard'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
@@ -35,7 +35,7 @@ export function RelatedProducts({ productId, categoryId, brandId }: RelatedProdu
           <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 pb-6 scrollbar-hide">
             {data.data.map((product) => (
               <div key={product.id} className="snap-start w-[280px] flex-shrink-0">
-                <ProductCard product={product} />
+                <MVPProductCard product={product} />
               </div>
             ))}
           </div>
@@ -44,7 +44,7 @@ export function RelatedProducts({ productId, categoryId, brandId }: RelatedProdu
         {/* Desktop: 2x2 Grid */}
         <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-6">
           {data.data.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <MVPProductCard key={product.id} product={product} />
           ))}
         </div>
       </div>

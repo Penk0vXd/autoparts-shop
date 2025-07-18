@@ -5,6 +5,13 @@
 
 # Testing
 /coverage
+**/__tests__/**
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+jest.config.js
+jest.setup.js
 
 # Next.js
 /.next/
@@ -42,6 +49,7 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+Dockerfile*
 
 # Logs
 logs
@@ -49,10 +57,36 @@ logs
 
 # Supabase temp files
 /supabase/.temp/
+/supabase/logs/
 
 # Cache directories
 .cache
 .parcel-cache
 .fusebox/
 .serverless
-.nyc_output 
+.nyc_output
+
+# SQL files and database scripts
+*.sql
+/scripts/
+
+# Documentation
+README.md
+*.md
+/docs/
+
+# Development files
+.eslintrc*
+.prettierrc*
+tailwind.config.ts
+postcss.config.js
+tsconfig.json
+
+# Seed files
+seed.ts
+add-product.ts
+
+# Git
+.git/
+.gitignore
+.gitattributes 

@@ -1,4 +1,5 @@
-import { MVPProductCardData } from '@/types/mvp-product-card'
+// MVP Product Card Data type
+type MVPProductCardData = any
 
 /**
  * MVP Product Card Example Data

@@ -253,13 +253,13 @@ export function useVehicleCompatibility() {
     // Check year compatibility
     if (selection.year && compatibility.years && Array.isArray(compatibility.years)) {
       const yearStrings = compatibility.years.map(String)
-      const yearRanges = yearStrings.filter(y => y.includes('-'))
-      const exactYears = yearStrings.filter(y => !y.includes('-'))
+      const yearRanges = yearStrings.filter((y: string) => y.includes('-'))
+      const exactYears = yearStrings.filter((y: string) => !y.includes('-'))
       
       let yearMatch = exactYears.includes(selection.year.toString())
       
       if (!yearMatch && yearRanges.length > 0) {
-        yearMatch = yearRanges.some(range => {
+        yearMatch = yearRanges.some((range: string) => {
           const [start, end] = range.split('-').map(Number)
           return selection.year! >= start && selection.year! <= end
         })
