@@ -42,6 +42,11 @@ export const SafeImage = forwardRef<HTMLImageElement, SafeImageProps>(
     const [isLoading, setIsLoading] = useState(true)
     const [hasError, setHasError] = useState(false)
     const [currentSrc, setCurrentSrc] = useState(src)
+  
+  // Helper function to determine if this is a real image URL vs placeholder
+  const isRealImageUrl = (url: string) => {
+    return url.startsWith('http') || url.startsWith('https')
+  }
 
     // Handle successful image load
     const handleLoad = () => {
