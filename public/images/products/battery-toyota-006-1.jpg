@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#FAFAFA"/>
+  <rect x="20" y="20" width="360" height="260" rx="12" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="2"/>
+  
+  <!-- Battery -->
+  <rect x="120" y="90" width="160" height="100" rx="8" fill="#1F2937"/>
+  <rect x="125" y="95" width="150" height="90" rx="6" fill="#374151"/>
+  
+  <!-- Positive terminal -->
+  <rect x="140" y="75" width="20" height="30" rx="4" fill="#DC2626"/>
+  <text x="150" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#DC2626">+</text>
+  
+  <!-- Negative terminal -->
+  <rect x="240" y="75" width="20" height="30" rx="4" fill="#1F2937"/>
+  <text x="250" y="65" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F2937">-</text>
+  
+  <!-- Battery label -->
+  <rect x="140" y="120" width="120" height="40" rx="4" fill="#E5E7EB"/>
+  <text x="200" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F2937">12V 60Ah</text>
+  <text x="200" y="152" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6B7280">AGM BATTERY</text>
+  
+  <text x="200" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F2937">Toyota Battery</text>
+  <text x="200" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6B7280">Акумулатор</text>
+  <text x="200" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#9CA3AF">Long Life</text>
+</svg> 

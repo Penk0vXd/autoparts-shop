@@ -27,7 +27,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="relative aspect-square">
           <Image
-            src={product.images?.[0] || '/placeholder-product.jpg'}
+            src={product.images?.[0] || '/images/placeholder-product.svg'}
             alt={product.name}
             fill
             className="object-cover rounded-lg"

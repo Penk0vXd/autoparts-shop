@@ -211,7 +211,7 @@ export function BrandDetailPage({ brandSlug, initialData }: BrandDetailPageProps
               <div className="flex-shrink-0">
                 <div className="w-24 h-24 bg-white rounded-lg shadow-md flex items-center justify-center p-4">
                   <SafeImage
-                    src={brand.logo_url || '/logos/default-brand.png'}
+                    src={brand.logo_url || '/images/default-brand-logo.png'}
                     alt={`${brand.name} logo`}
                     className="w-full h-full object-contain"
                   />
@@ -449,7 +449,7 @@ function BrandProductCard({ product }: { product: BrandProduct }) {
     >
       <div className="aspect-square bg-gray-100 relative">
         <SafeImage
-          src={product.image_url || '/images/placeholder-product.jpg'}
+          src={product.image_url || '/images/placeholder-product.svg'}
           alt={product.name}
           className="w-full h-full object-cover"
         />

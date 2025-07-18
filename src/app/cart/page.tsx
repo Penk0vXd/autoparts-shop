@@ -104,7 +104,7 @@ export default function CartPage() {
                   {/* Product Image */}
                   <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted flex-shrink-0">
                     <Image
-                      src={item.image || '/placeholder-product.jpg'}
+                      src={item.image || '/images/placeholder-product.svg'}
                       alt={item.name}
                       fill
                       className="object-cover"

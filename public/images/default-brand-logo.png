@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" fill="none">
+  <rect width="120" height="80" rx="8" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="2"/>
+  <circle cx="60" cy="30" r="15" fill="#D1D5DB"/>
+  <text x="60" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#374151">BRAND</text>
+  <text x="60" y="70" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6B7280">LOGO</text>
+</svg> 

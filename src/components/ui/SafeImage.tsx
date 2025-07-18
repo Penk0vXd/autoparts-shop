@@ -28,7 +28,7 @@ export const SafeImage = forwardRef<HTMLImageElement, SafeImageProps>(
       src,
       alt,
       className,
-      fallbackSrc = '/images/placeholder-product.jpg',
+      fallbackSrc = '/images/placeholder-product.svg',
       showFallbackIcon = true,
       fallbackClassName,
       loadingClassName,

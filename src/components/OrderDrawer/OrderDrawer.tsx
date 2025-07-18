@@ -198,7 +198,7 @@ export function OrderDrawer({ open, onOpenChange }: OrderDrawerProps) {
                       <div className="flex items-start gap-3">
                         <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                           <Image
-                            src={item.image || '/placeholder-product.jpg'}
+                            src={item.image || '/images/placeholder-product.svg'}
                             alt={item.name}
                             fill
                             className="object-cover"

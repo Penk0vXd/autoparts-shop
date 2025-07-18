@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" fill="none">
+  <rect width="300" height="200" fill="#F8FAFC"/>
+  <rect x="10" y="10" width="280" height="180" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+  
+  <!-- Brake pads -->
+  <rect x="80" y="70" width="50" height="60" rx="4" fill="#2C2C2C"/>
+  <rect x="85" y="75" width="40" height="50" rx="2" fill="#DC2626"/>
+  
+  <rect x="170" y="70" width="50" height="60" rx="4" fill="#2C2C2C"/>
+  <rect x="175" y="75" width="40" height="50" rx="2" fill="#DC2626"/>
+  
+  <!-- Friction material lines -->
+  <rect x="88" y="85" width="34" height="3" fill="#7F1D1D"/>
+  <rect x="88" y="95" width="34" height="3" fill="#7F1D1D"/>
+  <rect x="88" y="105" width="34" height="3" fill="#7F1D1D"/>
+  <rect x="88" y="115" width="34" height="3" fill="#7F1D1D"/>
+  
+  <rect x="178" y="85" width="34" height="3" fill="#7F1D1D"/>
+  <rect x="178" y="95" width="34" height="3" fill="#7F1D1D"/>
+  <rect x="178" y="105" width="34" height="3" fill="#7F1D1D"/>
+  <rect x="178" y="115" width="34" height="3" fill="#7F1D1D"/>
+  
+  <text x="150" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1F2937">BRAKE PADS</text>
+  <text x="150" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6B7280">Спирачни накладки</text>
+</svg> 
