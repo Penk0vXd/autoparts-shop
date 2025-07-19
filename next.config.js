@@ -99,6 +99,8 @@ const nextConfig = {
     swcMinify: true,
     // Better performance
     poweredByHeader: false,
+    // Ensure CSS is properly optimized
+    optimizeFonts: true,
   }),
 };
 
