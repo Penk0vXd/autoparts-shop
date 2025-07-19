@@ -9,10 +9,63 @@ import useSWR from 'swr'
 import { fetchProducts, getProductsKey } from '@/services/products'
 import { VehicleProvider } from '@/contexts/VehicleContext'
 import { useState, useEffect } from 'react'
-import { CarSelection as CarSelectionType, CarMake, CarModel } from '@/types/nhtsa'
-import { getNHTSAMakes, getNHTSAModels } from '@/services/nhtsaService'
 import { ProductCardBG as ProductCardBGType } from '@/types/product-card-bg'
 import { bulgarianProductExamples } from '@/data/product-examples-bg'
+
+// Internal vehicle data types - no external dependencies!
+type CarMake = {
+  id: string
+  name: string
+  originalId: number
+}
+
+type CarModel = {
+  id: string
+  name: string
+  makeId: string
+  originalId: number
+}
+
+type CarSelection = {
+  make?: CarMake
+  model?: CarModel
+}
+
+// Internal vehicle data - no more external NHTSA API dependency!
+const internalCarMakes: CarMake[] = [
+  { id: '1', name: 'BMW', originalId: 1 },
+  { id: '2', name: 'Mercedes-Benz', originalId: 2 },
+  { id: '3', name: 'Audi', originalId: 3 },
+  { id: '4', name: 'Volkswagen', originalId: 4 },
+  { id: '5', name: 'Toyota', originalId: 5 },
+  { id: '6', name: 'Ford', originalId: 6 },
+  { id: '7', name: 'Honda', originalId: 7 },
+  { id: '8', name: 'Nissan', originalId: 8 },
+]
+
+const internalCarModels: { [key: string]: CarModel[] } = {
+  'BMW': [
+    { id: '1', name: '3 Series', makeId: '1', originalId: 1 },
+    { id: '2', name: '5 Series', makeId: '1', originalId: 2 },
+    { id: '3', name: 'X3', makeId: '1', originalId: 3 },
+    { id: '4', name: 'X5', makeId: '1', originalId: 4 },
+  ],
+  'Mercedes-Benz': [
+    { id: '5', name: 'C-Class', makeId: '2', originalId: 5 },
+    { id: '6', name: 'E-Class', makeId: '2', originalId: 6 },
+    { id: '7', name: 'GLC', makeId: '2', originalId: 7 },
+  ],
+  'Audi': [
+    { id: '8', name: 'A4', makeId: '3', originalId: 8 },
+    { id: '9', name: 'A6', makeId: '3', originalId: 9 },
+    { id: '10', name: 'Q5', makeId: '3', originalId: 10 },
+  ],
+  'Toyota': [
+    { id: '11', name: 'Camry', makeId: '5', originalId: 11 },
+    { id: '12', name: 'Corolla', makeId: '5', originalId: 12 },
+    { id: '13', name: 'RAV4', makeId: '5', originalId: 13 },
+  ],
+}
 
 /**
  * Transform existing product data to ProductCardBG format
@@ -61,8 +114,8 @@ function transformToProductCardBG(product: any): ProductCardBGType {
  */
 export default function HomePage() {
   const t = useTranslations('products')
-  const [vehicleSelection, setVehicleSelection] = useState<CarSelectionType>({})
-  const [makes, setMakes] = useState<CarMake[]>([])
+  const [vehicleSelection, setVehicleSelection] = useState<CarSelection>({})
+  const [makes, setMakes] = useState(internalCarMakes)
   const [models, setModels] = useState<CarModel[]>([])
   
   // Fetch featured products
@@ -75,8 +128,7 @@ export default function HomePage() {
   useEffect(() => {
     const loadMakes = async () => {
       try {
-        const makesData = await getNHTSAMakes()
-        setMakes(makesData)
+        // No external NHTSA makes to load
       } catch (error) {
         console.error('Error loading makes:', error)
       }
@@ -89,7 +141,7 @@ export default function HomePage() {
     const loadModels = async () => {
       if (vehicleSelection.make) {
         try {
-          const modelsData = await getNHTSAModels(vehicleSelection.make.id)
+          const modelsData = internalCarModels[vehicleSelection.make.name] || []
           setModels(modelsData)
         } catch (error) {
           console.error('Error loading models:', error)
@@ -101,7 +153,7 @@ export default function HomePage() {
     loadModels()
   }, [vehicleSelection.make])
 
-  const handleVehicleSelection = (selection: CarSelectionType) => {
+  const handleVehicleSelection = (selection: CarSelection) => {
     setVehicleSelection(selection)
     // You can add logic here to filter products or navigate to filtered results
     if (selection.make && selection.model) {

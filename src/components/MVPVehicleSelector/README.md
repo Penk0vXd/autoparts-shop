@@ -429,8 +429,8 @@ This component is part of the autoparts-shop project and follows the project's l
 
 ## 🔗 Related Components
 
-- `VehicleSelector`: Full-featured vehicle selector with API integration
-- `CarSelection`: NHTSA API-based car selection
+- `VehicleSelector`: Full-featured vehicle selector with database integration
+- `CarSelection`: Internal vehicle data-based car selection
 - `BrandCard`: Brand display components
 - `ProductCard`: Product listing components
 

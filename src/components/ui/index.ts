@@ -1,11 +1,43 @@
-export { Card } from './Card';
-// export { CardDemo } from './CardDemo';
-export { Button } from './button';
-export { CartIcon } from './CartIcon';
-export * from './dialog';
-export * from './SafeImage';
-export * from './sheet';
-export * from './Toast';
+// UI Component Exports
+// Centralized export point for all UI components
+
+export { Button, buttonVariants } from './button'
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card'
+export { SafeImage, ProductImagePlaceholder, ProductImageError } from './SafeImage'
+export { LoadingSpinner, CategoryGridSkeleton } from './LoadingSpinner'
+export { CartIcon } from './CartIcon'
+export { Breadcrumb, BreadcrumbItem } from './Breadcrumb'
+export { Toast, addToast, ToastContainer } from './Toast'
+export { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogOverlay,
+  DialogClose,
+  DialogPortal 
+} from './dialog'
+export { 
+  Sheet, 
+  SheetContent, 
+  SheetDescription, 
+  SheetFooter, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from './sheet'
+
+// Error Boundary Components (NEW)
+export { 
+  ErrorBoundary, 
+  useErrorHandler, 
+  withErrorBoundary, 
+  SimpleErrorFallback, 
+  ProductErrorFallback 
+} from './ErrorBoundary'
 
 // MVP Vehicle Selector
 export { MVPVehicleSelector } from '../MVPVehicleSelector';
