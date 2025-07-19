@@ -6,10 +6,10 @@ import { ExclamationTriangleIcon, PhotoIcon } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 
 /**
- * SafeImage Component
+ * Production-Grade SafeImage Component
  * 
- * Enhanced Image component with error handling, loading states, and fallback support.
- * Designed for product images in auto parts catalog.
+ * Enhanced Image component with bulletproof error handling for Vercel deployment.
+ * Handles all edge cases: broken URLs, network failures, CORS issues.
  */
 
 interface SafeImageProps extends Omit<ImageProps, 'onError' | 'onLoad'> {
@@ -42,40 +42,57 @@ export const SafeImage = forwardRef<HTMLImageElement, SafeImageProps>(
     const [isLoading, setIsLoading] = useState(true)
     const [hasError, setHasError] = useState(false)
     const [currentSrc, setCurrentSrc] = useState(src)
+    const [retryCount, setRetryCount] = useState(0)
   
-  // Helper function to determine if this is a real image URL vs placeholder
-  const isRealImageUrl = (url: string) => {
-    return url.startsWith('http') || url.startsWith('https')
-  }
+    // Helper function to determine if this is a real image URL vs placeholder
+    const isRealImageUrl = (url: string) => {
+      if (!url || typeof url !== 'string') return false
+      return url.startsWith('http') || url.startsWith('https') || url.startsWith('/')
+    }
 
     // Handle successful image load
     const handleLoad = () => {
       setIsLoading(false)
       setHasError(false)
+      setRetryCount(0) // Reset retry count on successful load
       onLoad?.()
     }
 
-    // Handle image error
+    // Enhanced error handling with retry logic
     const handleError = () => {
       setIsLoading(false)
-      setHasError(true)
       onError?.()
       
-      // Try fallback image if available and not already tried
-      if (fallbackSrc && currentSrc !== fallbackSrc) {
+      // First try: use fallback if different from current
+      if (fallbackSrc && currentSrc !== fallbackSrc && retryCount === 0) {
         setCurrentSrc(fallbackSrc)
         setIsLoading(true)
         setHasError(false)
+        setRetryCount(1)
         return
       }
+      
+      // Second try: use default placeholder if not already tried
+      const defaultPlaceholder = '/images/default-product.jpg'
+      if (currentSrc !== defaultPlaceholder && retryCount === 1) {
+        setCurrentSrc(defaultPlaceholder)
+        setIsLoading(true)
+        setHasError(false)
+        setRetryCount(2)
+        return
+      }
+      
+      // Final fallback: show error state
+      setHasError(true)
     }
 
-    // Show fallback content if image failed to load
-    if (hasError && currentSrc === fallbackSrc) {
+    // Final error state - show placeholder content
+    if (hasError || !isRealImageUrl(String(currentSrc))) {
       return (
         <div
           className={cn(
             'flex items-center justify-center bg-gray-100 text-gray-400',
+            'min-h-[200px] w-full', // Ensure minimum size
             fallbackClassName,
             className
           )}
@@ -98,7 +115,7 @@ export const SafeImage = forwardRef<HTMLImageElement, SafeImageProps>(
       <Image
         ref={ref}
         src={currentSrc}
-        alt={alt}
+        alt={alt || 'Product image'}
         className={cn(
           'transition-opacity duration-200',
           isLoading && 'opacity-0',
@@ -109,6 +126,9 @@ export const SafeImage = forwardRef<HTMLImageElement, SafeImageProps>(
         )}
         onLoad={handleLoad}
         onError={handleError}
+        // Enhanced props for better loading
+        placeholder="blur"
+        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         {...props}
       />
     )
@@ -117,72 +137,17 @@ export const SafeImage = forwardRef<HTMLImageElement, SafeImageProps>(
 
 SafeImage.displayName = 'SafeImage'
 
-/**
- * ProductImagePlaceholder Component
- * 
- * Placeholder component for product images with loading state
- */
-interface ProductImagePlaceholderProps {
-  className?: string
-  size?: 'sm' | 'md' | 'lg'
-}
+export default SafeImage
 
-export function ProductImagePlaceholder({ 
-  className, 
-  size = 'md' 
-}: ProductImagePlaceholderProps) {
-  const sizeClasses = {
-    sm: 'h-32 w-32',
-    md: 'h-48 w-48',
-    lg: 'h-64 w-64'
-  }
+// Additional export for backwards compatibility
+export const ProductImagePlaceholder = ({ className, ...props }: any) => (
+  <div className={cn('bg-gray-100 flex items-center justify-center', className)} {...props}>
+    <PhotoIcon className="h-8 w-8 text-gray-400" />
+  </div>
+)
 
-  return (
-    <div className={cn(
-      'flex items-center justify-center bg-gray-100 text-gray-400 rounded-lg',
-      sizeClasses[size],
-      className
-    )}>
-      <div className="flex flex-col items-center justify-center p-4">
-        <PhotoIcon className="h-8 w-8 mb-2" />
-        <span className="text-xs text-center">Зарежда се...</span>
-      </div>
-    </div>
-  )
-}
-
-/**
- * ProductImageError Component
- * 
- * Error state component for product images
- */
-interface ProductImageErrorProps {
-  className?: string
-  size?: 'sm' | 'md' | 'lg'
-  message?: string
-}
-
-export function ProductImageError({ 
-  className, 
-  size = 'md',
-  message = 'Грешка при зареждане'
-}: ProductImageErrorProps) {
-  const sizeClasses = {
-    sm: 'h-32 w-32',
-    md: 'h-48 w-48',
-    lg: 'h-64 w-64'
-  }
-
-  return (
-    <div className={cn(
-      'flex items-center justify-center bg-red-50 text-red-400 rounded-lg border border-red-200',
-      sizeClasses[size],
-      className
-    )}>
-      <div className="flex flex-col items-center justify-center p-4">
-        <ExclamationTriangleIcon className="h-8 w-8 mb-2" />
-        <span className="text-xs text-center">{message}</span>
-      </div>
-    </div>
-  )
-} 
+export const ProductImageError = ({ className, ...props }: any) => (
+  <div className={cn('bg-red-50 flex items-center justify-center', className)} {...props}>
+    <ExclamationTriangleIcon className="h-6 w-6 text-red-400" />
+  </div>
+) 

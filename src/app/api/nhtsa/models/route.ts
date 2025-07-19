@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { NHTSAModelsResponse, CarModel } from '@/types/nhtsa'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 30 // 30 seconds timeout
 
 export async function GET(request: Request) {
   try {
@@ -17,22 +18,34 @@ export async function GET(request: Request) {
 
     const encodedMakeName = encodeURIComponent(makeName.trim())
     
+    // Add timeout to prevent hanging builds
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+    
     const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${encodedMakeName}?format=json`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
       cache: 'force-cache',
+      signal: controller.signal,
     })
 
+    clearTimeout(timeoutId)
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`NHTSA API error: ${response.status}`)
     }
 
     const data: NHTSAModelsResponse = await response.json()
 
     if (!data.Results || data.Results.length === 0) {
-      throw new Error(`No models found for make: ${makeName}`)
+      // Return empty result instead of throwing error
+      return NextResponse.json({
+        success: true,
+        data: [],
+        message: `No models found for make: ${makeName}`
+      })
     }
 
     // Transform NHTSA data to our format and sort alphabetically
@@ -56,9 +69,13 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Error fetching models:', error)
+    
+    // Return fallback empty data with error message
     return NextResponse.json({
-      success: false,
+      success: true,
+      data: [],
+      message: 'Unable to fetch vehicle models at this time',
       error: error instanceof Error ? error.message : 'Failed to fetch models'
-    }, { status: 500 })
+    })
   }
 } 

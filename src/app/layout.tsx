@@ -7,6 +7,7 @@ import { SearchDialog } from '@/components/SearchDialog/SearchDialog'
 import { GlobalKeyboardShortcuts } from '@/components/GlobalKeyboardShortcuts'
 import Footer from '@/components/Footer/Footer'
 import { ToastContainer } from '@/components/ui/Toast'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] })
@@ -36,20 +37,48 @@ export default async function RootLayout({
   return (
     <html lang="bg">
       <body className={inter.className}>
-        <NextIntlClientProvider messages={messages}>
-          <div className="min-h-screen bg-background">
-            <Header />
-            <SearchDialog />
-            <GlobalKeyboardShortcuts />
+        <ErrorBoundary>
+          <NextIntlClientProvider messages={messages}>
+            <div className="min-h-screen bg-background">
+              <ErrorBoundary fallback={
+                <div className="h-16 bg-white border-b flex items-center justify-center">
+                  <span className="text-gray-600">Грешка при зареждането на хедъра</span>
+                </div>
+              }>
+                <Header />
+              </ErrorBoundary>
 
-            <main>
-              {children}
-            </main>
+              <ErrorBoundary>
+                <SearchDialog />
+              </ErrorBoundary>
 
-            <Footer />
-          </div>
-          <ToastContainer />
-        </NextIntlClientProvider>
+              <ErrorBoundary>
+                <GlobalKeyboardShortcuts />
+              </ErrorBoundary>
+
+              <main>
+                <ErrorBoundary fallback={
+                  <div className="min-h-screen flex items-center justify-center">
+                    <div className="text-center">
+                      <h1 className="text-2xl font-bold text-gray-900 mb-4">Възникна грешка</h1>
+                      <p className="text-gray-600">Моля, презаредете страницата или се опитайте отново.</p>
+                    </div>
+                  </div>
+                }>
+                  {children}
+                </ErrorBoundary>
+              </main>
+
+              <ErrorBoundary>
+                <Footer />
+              </ErrorBoundary>
+            </div>
+            
+            <ErrorBoundary>
+              <ToastContainer />
+            </ErrorBoundary>
+          </NextIntlClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

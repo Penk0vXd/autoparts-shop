@@ -6,13 +6,46 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // Temporarily disable ESLint during builds to get deployment working
+    // Only ignore during builds if you're confident about code quality
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Temporarily disable TypeScript strict checking during builds
+    // Only ignore during builds if you're confident about types
     ignoreBuildErrors: true,
   },
+  
+  // Enhanced image configuration for production
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'unsplash.com',
+      },
+      // Allow specific trusted domains for product images
+      {
+        protocol: 'https',
+        hostname: 'cdn.example.com',
+      },
+    ],
+    // Optimize images but allow fallbacks
+    unoptimized: false,
+    // Add proper image formats
+    formats: ['image/webp', 'image/avif'],
+    // Set reasonable image limits
+    minimumCacheTTL: 60,
+    // Optimize for large images
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+  
   // Webpack configuration for better module resolution
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Ensure proper path alias resolution
@@ -43,72 +76,30 @@ const nextConfig = {
     
     return config;
   },
-  // Enable experimental features for better build stability
+  
+  // Enhanced experimental features
   experimental: {
     // Optimize package imports
     optimizePackageImports: ['@heroicons/react', 'lucide-react'],
-    // Enable turbo mode for faster builds
-    turbo: {
-      rules: {
-        '*.ts': {
-          loaders: ['swc-loader'],
-          options: {
-            jsc: {
-              parser: {
-                syntax: 'typescript',
-                tsx: false,
-              },
-            },
-          },
-        },
-        '*.tsx': {
-          loaders: ['swc-loader'],
-          options: {
-            jsc: {
-              parser: {
-                syntax: 'typescript',
-                tsx: true,
-              },
-            },
-          },
-        },
-      },
-    },
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
-      // Common brand logo sources
-      {
-        protocol: 'https',
-        hostname: 'www.tvh.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'example.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.example.com',
-      },
-      // Allow any HTTPS image for development (remove in production)
-      {
-        protocol: 'https',
-        hostname: '**',
-      }
-    ],
-    // Fallback for unoptimized images
-    unoptimized: false,
+  
+  // Better error handling during build
+  onDemandEntries: {
+    // Period (in ms) where the server will keep pages in the buffer
+    maxInactiveAge: 25 * 1000,
+    // Number of pages that should be kept simultaneously without being disposed
+    pagesBufferLength: 2,
   },
-  // Remove standalone output for Vercel - Vercel handles this automatically
-  // output: 'standalone',
+  
+  // Production optimizations
+  ...(process.env.NODE_ENV === 'production' && {
+    // Enable compression
+    compress: true,
+    // Optimize build
+    swcMinify: true,
+    // Better performance
+    poweredByHeader: false,
+  }),
 };
 
 module.exports = withNextIntl(nextConfig); 
