@@ -14,7 +14,6 @@ export async function GET(): Promise<NextResponse<VehicleBrandResponse>> {
       .from('vehicle_brands')
       .select('*')
       .eq('is_active', true)
-      .order('is_premium', { ascending: false })
       .order('sort_order', { ascending: true })
       .order('name', { ascending: true });
 

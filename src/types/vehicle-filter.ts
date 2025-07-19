@@ -18,7 +18,7 @@ export interface VehicleBrand {
   logo_url?: string;
   country: string;
   founded_year: number;
-  is_premium: boolean;
+  is_premium?: boolean;
   website_url?: string;
   sort_order: number;
   is_active: boolean;
@@ -484,9 +484,12 @@ export function getCompatibilityKey(selection: VehicleSelection): string | null 
  */
 export function sortBrands(brands: VehicleBrand[]): VehicleBrand[] {
   return [...brands].sort((a, b) => {
-    // Premium brands first
-    if (a.is_premium && !b.is_premium) return -1;
-    if (!a.is_premium && b.is_premium) return 1;
+    // Premium brands first (treat undefined as false)
+    const aIsPremium = a.is_premium === true;
+    const bIsPremium = b.is_premium === true;
+    
+    if (aIsPremium && !bIsPremium) return -1;
+    if (!aIsPremium && bIsPremium) return 1;
     
     // Then by sort_order
     if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;

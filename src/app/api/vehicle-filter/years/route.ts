@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 import type { VehicleYear, VehicleYearResponse } from '@/types/vehicle-filter';
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/vehicle-filter/years?modelId=uuid
  * 

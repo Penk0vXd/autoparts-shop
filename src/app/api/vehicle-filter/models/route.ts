@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 import type { VehicleModel, VehicleModelResponse } from '@/types/vehicle-filter';
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/vehicle-filter/models?brandId=uuid
  * 
