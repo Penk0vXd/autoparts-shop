@@ -1,181 +1,191 @@
 import { supabase } from '@/lib/db'
 import type { ProductWithRelations } from '@/types/supabase'
-
-export interface SearchProduct {
-  id: string
-  name: string
-  slug: string
-  price: number
-  compare_price?: number
-  images?: string[] | null
-  brand?: {
-    name: string
-    slug: string
-  }
-}
+import { isFeatureEnabled } from '@/config/features'
 
 /**
- * Search products using prefix-only full-text search
- * @param query - Search query string
- * @param limit - Maximum number of results (default: 8)
- * @returns Array of matching products
+ * Enhanced search service with real-time suggestions and semantic search
+ * Returns empty results when product search is disabled
  */
-export async function searchProducts(query: string, limit = 8): Promise<SearchProduct[]> {
-  const trimmedQuery = query.trim()
-  if (!trimmedQuery) {
+export async function searchProducts(query: string): Promise<ProductWithRelations[]> {
+  // Return empty results if product search is disabled
+  if (!isFeatureEnabled('productSearch') || !query.trim()) {
     return []
   }
 
   try {
-    // Use the new prefix search function
+    console.log(`[Search] Searching for: "${query}"`)
+    
+    // First try semantic/full-text search
     const { data: rpcData, error: rpcError } = await supabase
-      .rpc('search_products_prefix', { 
-        query: trimmedQuery, 
-        lim: limit 
+      .rpc('search_products_semantic', { 
+        search_query: query.trim(),
+        max_results: 20
       })
 
     if (rpcError) {
-      console.warn('Prefix search failed, falling back to simple search:', rpcError.message)
-      // Fallback to the old function if prefix search fails
-      return await fallbackToOldSearch(trimmedQuery, limit)
-    }
-
-    // If RPC worked, we need to get the full data with relations
-    if (rpcData && rpcData.length > 0) {
-      const productIds = rpcData.map((p: any) => p.id)
+      console.warn('[Search] RPC search failed, falling back to manual search:', rpcError)
+      
+      // Fallback to manual search if RPC fails
       const { data: fullData, error: selectError } = await supabase
         .from('products')
         .select(`
-          id,
-          name,
-          slug,
-          price,
-          compare_price,
-          images,
-          brand:brands(name, slug)
+          *,
+          brand:brands(id, name, logo_url),
+          category:categories(id, name),
+          images:product_images(url, alt, is_primary)
         `)
-        .in('id', productIds)
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%,part_number.ilike.%${query}%`)
         .eq('is_active', true)
+        .limit(20)
 
-      if (selectError) {
-        console.error('Failed to fetch full product data:', selectError)
-        return await fallbackToOldSearch(trimmedQuery, limit)
-      }
-
-      // Transform the data to match SearchProduct interface
-      const transformedData = fullData?.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        slug: item.slug,
-        price: item.price,
-        compare_price: item.compare_price,
-        images: item.images,
-        brand: Array.isArray(item.brand) && item.brand.length > 0 ? item.brand[0] : item.brand
-      })) || []
-
-      return transformedData
+      if (selectError) throw selectError
+      return fullData || []
     }
 
-    return []
+    return rpcData || []
+    
   } catch (error) {
-    console.error('Search service error:', error)
-    // Fallback to old search method
-    return await fallbackToOldSearch(trimmedQuery, limit)
+    console.error('[Search] Search error:', error)
+    return []
   }
 }
 
 /**
- * Fallback to old search function if prefix search fails
+ * Get search suggestions based on partial query
  */
-async function fallbackToOldSearch(query: string, limit = 8): Promise<SearchProduct[]> {
+export async function getSearchSuggestions(query: string, limit = 8): Promise<string[]> {
+  if (!isFeatureEnabled('productSearch') || !query.trim() || query.length < 2) {
+    return []
+  }
+
   try {
     const { data: rpcData, error: rpcError } = await supabase
-      .rpc('search_products', { 
-        query: query, 
-        lim: limit 
+      .rpc('get_search_suggestions', { 
+        partial_query: query.trim(),
+        max_suggestions: limit
       })
 
-    if (!rpcError && rpcData && rpcData.length > 0) {
-      const productIds = rpcData.map((p: any) => p.id)
+    if (rpcError) {
+      console.warn('[Search] Suggestions RPC failed, using basic suggestions:', rpcError)
+      
+      // Fallback: Get product names that match
       const { data: fullData, error: selectError } = await supabase
         .from('products')
-        .select(`
-          id,
-          name,
-          slug,
-          price,
-          compare_price,
-          images,
-          brand:brands(name, slug)
-        `)
-        .in('id', productIds)
+        .select('name')
+        .ilike('name', `%${query}%`)
         .eq('is_active', true)
+        .limit(limit)
 
-      if (!selectError) {
-        const transformedData = fullData?.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          slug: item.slug,
-          price: item.price,
-          compare_price: item.compare_price,
-          images: item.images,
-          brand: Array.isArray(item.brand) && item.brand.length > 0 ? item.brand[0] : item.brand
-        })) || []
-
-        return transformedData
-      }
+      if (selectError) throw selectError
+      return fullData?.map(p => p.name) || []
     }
-  } catch (error) {
-    console.warn('Old search function also failed:', error)
-  }
 
-  // Final fallback to ILIKE search (only prefix matching)
-  return await prefixFallbackSearch(query, limit)
+    return rpcData || []
+    
+  } catch (error) {
+    console.error('[Search] Suggestions error:', error)
+    return []
+  }
 }
 
 /**
- * Final fallback using ILIKE with prefix matching only
+ * Advanced search with multiple filters and faceted results
  */
-async function prefixFallbackSearch(query: string, limit = 8): Promise<SearchProduct[]> {
-  const tokens = query.split(/\s+/).filter(t => t.trim().length > 0)
-  if (tokens.length === 0) {
-    return []
+export async function advancedSearch(params: {
+  query?: string
+  category?: string
+  brand?: string
+  minPrice?: number
+  maxPrice?: number
+  inStock?: boolean
+  limit?: number
+}): Promise<{
+  products: ProductWithRelations[]
+  total: number
+  facets: {
+    brands: Array<{ name: string; count: number }>
+    categories: Array<{ name: string; count: number }>
+    priceRange: { min: number; max: number }
+  }
+}> {
+  if (!isFeatureEnabled('productSearch')) {
+    return {
+      products: [],
+      total: 0,
+      facets: {
+        brands: [],
+        categories: [],
+        priceRange: { min: 0, max: 0 }
+      }
+    }
   }
 
-  // Create ILIKE conditions for prefix matching only
-  const conditions = tokens.map(token => 
-    `name.ilike.${token}%,description.ilike.${token}%`
-  ).join(',')
+  try {
+    const { query, category, brand, minPrice, maxPrice, inStock, limit = 20 } = params
 
-  const { data, error } = await supabase
-    .from('products')
-    .select(`
-      id,
-      name,
-      slug,
-      price,
-      compare_price,
-      images,
-      brand:brands(name, slug)
-    `)
-    .or(conditions)
-    .eq('is_active', true)
-    .limit(limit)
+    // Build the search query
+    let queryBuilder = supabase
+      .from('products')
+      .select(`
+        *,
+        brand:brands(id, name, logo_url),
+        category:categories(id, name),
+        images:product_images(url, alt, is_primary)
+      `, { count: 'exact' })
+      .eq('is_active', true)
 
-  if (error) {
-    console.error('Prefix fallback search error:', error)
-    return []
+    // Apply filters
+    if (query) {
+      queryBuilder = queryBuilder.or(`name.ilike.%${query}%,description.ilike.%${query}%,part_number.ilike.%${query}%`)
+    }
+    
+    if (category) {
+      queryBuilder = queryBuilder.eq('category_id', category)
+    }
+    
+    if (brand) {
+      queryBuilder = queryBuilder.eq('brand_id', brand)
+    }
+    
+    if (minPrice !== undefined) {
+      queryBuilder = queryBuilder.gte('price', minPrice)
+    }
+    
+    if (maxPrice !== undefined) {
+      queryBuilder = queryBuilder.lte('price', maxPrice)
+    }
+    
+    if (inStock) {
+      queryBuilder = queryBuilder.gt('stock_quantity', 0)
+    }
+
+    const { data, error, count } = await queryBuilder.limit(limit)
+
+    if (error) throw error
+
+    // Get facets (simplified for now)
+    const facets = {
+      brands: [] as Array<{ name: string; count: number }>,
+      categories: [] as Array<{ name: string; count: number }>,
+      priceRange: { min: 0, max: 1000 }
+    }
+
+    return {
+      products: data || [],
+      total: count || 0,
+      facets
+    }
+    
+  } catch (error) {
+    console.error('[Search] Advanced search error:', error)
+    return {
+      products: [],
+      total: 0,
+      facets: {
+        brands: [],
+        categories: [],
+        priceRange: { min: 0, max: 0 }
+      }
+    }
   }
-
-  const transformedData = data?.map((item: any) => ({
-    id: item.id,
-    name: item.name,
-    slug: item.slug,
-    price: item.price,
-    compare_price: item.compare_price,
-    images: item.images,
-    brand: Array.isArray(item.brand) && item.brand.length > 0 ? item.brand[0] : item.brand
-  })) || []
-
-  return transformedData
 } 

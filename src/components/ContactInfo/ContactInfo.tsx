@@ -42,11 +42,11 @@ export function ContactInfo() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Адрес на офиса</h3>
               <p className="text-gray-600">
-                бул. Васил Левски 47<br />
-                1000 София, България
+                Mirko naj dobriq<br />
+                sliven brat mi
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                📍 В близост до НДК и метростанция
+                📍 na centara kraj lokalnite
               </p>
             </div>
           </div>

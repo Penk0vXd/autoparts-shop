@@ -1,4 +1,5 @@
 import type { ProductWithRelations } from '@/types/supabase'
+import { isFeatureEnabled } from '@/config/features'
 
 export type ProductsParams = {
   page?: number
@@ -28,57 +29,134 @@ export type ProductsResponse = {
  * Used with SWR for data fetching and caching
  */
 export async function fetchProducts(params: ProductsParams = {}): Promise<ProductsResponse> {
-  const searchParams = new URLSearchParams()
-  
-  if (params.page) {
-    searchParams.set('page', params.page.toString())
-  }
-  if (params.limit) {
-    searchParams.set('limit', params.limit.toString())
-  }
-  if (params.category) {
-    searchParams.set('category', params.category)
-  }
-  if (params.brand) {
-    searchParams.set('brand', params.brand)
-  }
-  if (params.search) {
-    searchParams.set('search', params.search)
-  }
-  if (params.minPrice) {
-    searchParams.set('minPrice', params.minPrice.toString())
-  }
-  if (params.maxPrice) {
-    searchParams.set('maxPrice', params.maxPrice.toString())
-  }
-  if (params.inStock) {
-    searchParams.set('inStock', 'true')
-  }
-  if (params.featured) {
-    searchParams.set('featured', 'true')
+  // Return empty results if products feature is disabled
+  if (!isFeatureEnabled('products')) {
+    return {
+      success: true,
+      data: [],
+      pagination: {
+        page: 1,
+        limit: params.limit || 10,
+        total: 0,
+        totalPages: 0
+      }
+    }
   }
 
-  const response = await fetch(`/api/products?${searchParams.toString()}`)
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch products')
+  try {
+    const searchParams = new URLSearchParams()
+    
+    // Add pagination params
+    searchParams.append('page', (params.page || 1).toString())
+    searchParams.append('limit', (params.limit || 10).toString())
+    
+    // Add filter params
+    if (params.category) searchParams.append('category', params.category)
+    if (params.brand) searchParams.append('brand', params.brand)
+    if (params.search) searchParams.append('search', params.search)
+    if (params.minPrice) searchParams.append('minPrice', params.minPrice.toString())
+    if (params.maxPrice) searchParams.append('maxPrice', params.maxPrice.toString())
+    if (params.inStock) searchParams.append('inStock', 'true')
+    if (params.featured) searchParams.append('featured', 'true')
+    
+    const response = await fetch(`/api/products?${searchParams}`)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    return data
+    
+  } catch (error) {
+    console.error('Error fetching products:', error)
+    throw error
   }
-
-  return response.json()
 }
 
 /**
- * Fetch a single product by slug
+ * Get cache key for SWR
  */
-export async function fetchProduct(slug: string): Promise<ProductWithRelations> {
-  const response = await fetch(`/api/products/${slug}`)
+export function getProductsKey(params: ProductsParams): string | null {
+  // Return null if products are disabled (prevents SWR from making requests)
+  if (!isFeatureEnabled('products')) {
+    return null
+  }
   
-  if (!response.ok) {
-    throw new Error('Failed to fetch product')
+  return `products-${JSON.stringify(params)}`
+}
+
+/**
+ * Fetch single product by slug
+ */
+export async function fetchProduct(slug: string): Promise<ProductWithRelations | null> {
+  if (!isFeatureEnabled('products')) {
+    return null
   }
 
-  const data = await response.json()
-  return data.data
+  try {
+    const response = await fetch(`/api/products/${slug}`)
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null
+      }
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    return data.success ? data.data : null
+    
+  } catch (error) {
+    console.error('Error fetching product:', error)
+    return null
+  }
+}
+
+/**
+ * Get cache key for single product SWR
+ */
+export function getProductKey(slug: string): string | null {
+  if (!isFeatureEnabled('products')) {
+    return null
+  }
+  
+  return `product-${slug}`
+}
+
+/**
+ * Fetch related products for a product
+ */
+export async function fetchRelatedProducts(productId: string, limit = 4): Promise<ProductWithRelations[]> {
+  if (!isFeatureEnabled('products')) {
+    return []
+  }
+
+  try {
+    const response = await fetch(`/api/products/${productId}/related?limit=${limit}`)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    return data.success ? data.data : []
+    
+  } catch (error) {
+    console.error('Error fetching related products:', error)
+    return []
+  }
+}
+
+/**
+ * Get cache key for related products SWR
+ */
+export function getRelatedProductsKey(productId: string, limit = 4): string | null {
+  if (!isFeatureEnabled('products')) {
+    return null
+  }
+  
+  return `related-products-${productId}-${limit}`
 }
 
 /**
@@ -107,32 +185,4 @@ export async function fetchCategories() {
 
   const data = await response.json()
   return data.data
-}
-
-/**
- * SWR key generator for products
- */
-export function getProductsKey(params: ProductsParams = {}) {
-  return ['products', params]
-}
-
-/**
- * SWR key generator for single product
- */
-export function getProductKey(slug: string) {
-  return ['product', slug]
-}
-
-/**
- * SWR key generator for brands
- */
-export function getBrandsKey() {
-  return ['brands']
-}
-
-/**
- * SWR key generator for categories
- */
-export function getCategoriesKey() {
-  return ['categories']
 } 

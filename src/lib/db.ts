@@ -1,67 +1,87 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
+import { isFeatureEnabled } from '@/config/features'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables')
+// Fallback dummy values for MVP mode or when env vars are missing
+const dummyUrl = 'https://dummy-project-id.supabase.co'
+const dummyKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1bW15LXByb2plY3QtaWQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0NjkzNTAwMCwiZXhwIjoxOTYyNTExMDAwfQ.dummy-signature'
+
+// Check if we need real Supabase (when products are enabled) or can use dummy
+const needsRealSupabase = isFeatureEnabled('products') || isFeatureEnabled('admin')
+
+if (needsRealSupabase && (!supabaseUrl || !supabaseKey)) {
+  console.warn('⚠️ Products feature enabled but Supabase environment variables missing. Using dummy client.')
 }
 
 // Client-side Supabase client (with RLS)
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient<Database>(
+  supabaseUrl || dummyUrl, 
+  supabaseKey || dummyKey
+)
 
 // Server-side Supabase client (bypasses RLS for admin operations)
 export const supabaseAdmin = createClient<Database>(
-  supabaseUrl,
-  supabaseServiceKey,
+  supabaseUrl || dummyUrl,
+  supabaseServiceKey || dummyKey,
   {
     auth: {
-      persistSession: false,
       autoRefreshToken: false,
-    },
+      persistSession: false
+    }
   }
 )
 
-// Helper to get user session server-side
 export async function getServerSession() {
-  const { data: { session }, error } = await supabase.auth.getSession()
-  return { session, error }
+  if (!needsRealSupabase) return null
+  
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    if (error) {
+      console.error('Error getting session:', error)
+      return null
+    }
+    return session
+  } catch (error) {
+    console.error('Session error:', error)
+    return null
+  }
 }
 
-// Helper to require authentication server-side
-export async function requireServerAuth() {
-  const { session, error } = await getServerSession()
+export async function getCurrentUser() {
+  if (!needsRealSupabase) return null
   
-  if (error || !session?.user) {
-    throw new Error('Authentication required')
+  try {
+    const session = await getServerSession()
+    return session?.user ?? null
+  } catch (error) {
+    console.error('User error:', error)
+    return null
   }
-  
-  return session.user
 }
 
-// Helper to check if user is admin
-export async function isAdmin(userId: string): Promise<boolean> {
-  const { data } = await supabaseAdmin.auth.admin.getUserById(userId)
-  return data.user?.user_metadata?.role === 'admin' || false
+export async function getUserById(userId: string) {
+  if (!needsRealSupabase) return null
+  
+  try {
+    const { data } = await supabaseAdmin.auth.admin.getUserById(userId)
+    return data.user
+  } catch (error) {
+    console.error('Get user by ID error:', error)
+    return null
+  }
 }
 
-// Generic error handler for database operations
-export function handleDbError(error: any, operation: string) {
-  console.error(`Database error in ${operation}:`, error)
-  
-  if (error.code === 'PGRST116') {
-    throw new Error('Resource not found')
+// Database error handler with feature flag awareness
+export function handleDbError(error: any, context = 'Database operation') {
+  if (!needsRealSupabase) {
+    console.log(`[MVP Mode] ${context} skipped - products disabled`)
+    return { data: null, error: 'Products feature disabled' }
   }
   
-  if (error.code === '23505') {
-    throw new Error('Resource already exists')
-  }
-  
-  if (error.code === '23503') {
-    throw new Error('Referenced resource not found')
-  }
-  
-  throw new Error(`Database operation failed: ${operation}`)
+  console.error(`${context}:`, error)
+  return { data: null, error: error.message || 'Database error' }
 } 

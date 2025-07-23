@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { FiPhone, FiMail, FiMapPin } from 'react-icons/fi'
+import { isFeatureEnabled } from '@/config/features'
 
 interface Category {
   id: string
@@ -14,9 +15,10 @@ interface FooterProps {
 /**
  * Polished, responsive footer component with red-and-white theme
  * Four-column layout on desktop, stacked on mobile with proper accessibility
+ * MVP mode: Hides product categories and promotes inquiry flow
  */
 export default function Footer({ categories = [] }: FooterProps) {
-  // Fallback sample categories if none provided
+  // Fallback sample categories if none provided (only shown if products feature is enabled)
   const defaultCategories = [
     { id: '1', name: 'Двигатели', slug: 'dvigateli' },
     { id: '2', name: 'Спирачки', slug: 'spirachki' },
@@ -45,22 +47,68 @@ export default function Footer({ categories = [] }: FooterProps) {
               </p>
             </div>
 
-            {/* Categories Column */}
+            {/* Categories Column - Hidden in MVP mode, replaced with services */}
             <div className="text-center sm:text-left">
-              <h3 className="mb-4 text-lg font-semibold tracking-wide text-white/90">Категории</h3>
-              <ul className="space-y-3">
-                {displayCategories.map((category) => (
-                  <li key={category.id}>
-                    <Link
-                      href={`/catalog?category=${category.slug}`}
-                      className="text-white/70 hover:text-white transition-colors duration-200 text-sm"
-                      aria-label={`Разгледай категория ${category.name}`}
-                    >
-                      {category.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {isFeatureEnabled('productCategories') ? (
+                <>
+                  <h3 className="mb-4 text-lg font-semibold tracking-wide text-white/90">Категории</h3>
+                  <ul className="space-y-3">
+                    {displayCategories.map((category) => (
+                      <li key={category.id}>
+                        <Link
+                          href={`/catalog?category=${category.slug}`}
+                          className="text-white/70 hover:text-white transition-colors duration-200 text-sm"
+                          aria-label={`Разгледай категория ${category.name}`}
+                        >
+                          {category.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <h3 className="mb-4 text-lg font-semibold tracking-wide text-white/90">Услуги</h3>
+                  <ul className="space-y-3">
+                    <li>
+                      <Link
+                        href="/inquiry"
+                        className="text-white/70 hover:text-white transition-colors duration-200 text-sm"
+                        aria-label="Заявете част"
+                      >
+                        Заявка за част
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/brands"
+                        className="text-white/70 hover:text-white transition-colors duration-200 text-sm"
+                        aria-label="Разгледай марки"
+                      >
+                        Всички марки
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/contact"
+                        className="text-white/70 hover:text-white transition-colors duration-200 text-sm"
+                        aria-label="Консултации"
+                      >
+                        Консултации
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/about"
+                        className="text-white/70 hover:text-white transition-colors duration-200 text-sm"
+                        aria-label="Нашият екип"
+                      >
+                        Нашият екип
+                      </Link>
+                    </li>
+                  </ul>
+                </>
+              )}
             </div>
 
             {/* Information Column */}
@@ -87,7 +135,7 @@ export default function Footer({ categories = [] }: FooterProps) {
                 </li>
                 <li>
                   <Link
-                    href="/shipping"
+                    href="/delivery"
                     className="text-white/70 hover:text-white transition-colors duration-200 text-sm"
                     aria-label="Информация за доставка"
                   >
@@ -96,11 +144,11 @@ export default function Footer({ categories = [] }: FooterProps) {
                 </li>
                 <li>
                   <Link
-                    href="/returns"
+                    href="#"
                     className="text-white/70 hover:text-white transition-colors duration-200 text-sm"
-                    aria-label="Условия за връщане"
+                    aria-label="Условия за поверителност"
                   >
-                    Връщане
+                    Поверителност
                   </Link>
                 </li>
               </ul>
@@ -135,6 +183,18 @@ export default function Footer({ categories = [] }: FooterProps) {
                   <span className="text-white/70 text-sm">София, България</span>
                 </div>
               </div>
+              
+              {/* CTA for inquiry in MVP mode */}
+              {!isFeatureEnabled('productCategories') && (
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <Link
+                    href="/inquiry"
+                    className="inline-block bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Заявете част →
+                  </Link>
+                </div>
+              )}
             </div>
 
           </div>

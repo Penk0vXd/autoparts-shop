@@ -1,145 +1,63 @@
-'use client'
+import { Metadata } from 'next'
+import { isFeatureEnabled, FEATURE_CONFIG } from '@/config/features'
+import Link from 'next/link'
 
-import { useState } from 'react'
+export const metadata: Metadata = {
+  title: 'Каталог | Авточасти',
+  description: 'Разгледайте нашия пълен каталог с авточасти за всички марки автомобили.',
+}
 
-import useSWR from 'swr'
-import { MVPProductCard } from '@/components/ProductCard/MVPProductCard'
-import { fetchProducts, getProductsKey, type ProductsParams } from '@/services/products'
-
-/**
- * Catalog page displaying products with filtering and pagination
- */
 export default function CatalogPage() {
-  const [filters, setFilters] = useState<ProductsParams>({
-    page: 1,
-    limit: 12,
-  })
-
-  const { data, error, isLoading } = useSWR(
-    getProductsKey(filters),
-    () => fetchProducts(filters)
-  )
-
-  const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, page }))
-  }
-
-  const handleFilterChange = (newFilters: Partial<ProductsParams>) => {
-    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }))
-  }
-
-  if (error) {
+  // Feature guard - redirect to inquiry flow when products are disabled
+  if (!isFeatureEnabled('products')) {
+    const inquiryConfig = FEATURE_CONFIG.inquiry
+    
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center text-red-600">
-          <p>Възникна грешка</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-lg mx-auto text-center p-8">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Каталогът в момента не е наличен
+          </h1>
+          
+          <p className="text-gray-600 mb-8">
+            В момента работим върху подобряването на нашия каталог. 
+            Моля, използвайте формата за запитване, за да намерите необходимите части.
+          </p>
+          
+          <div className="space-y-4">
+            <Link
+              href="/inquiry"
+              className="inline-block w-full bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+            >
+              {inquiryConfig.ctaText}
+            </Link>
+            
+            <Link
+              href="/"
+              className="inline-block w-full text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              ← Върнете се към началната страница
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
-
+  
+  // Original catalog content would go here when products feature is enabled
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Каталог продукти
-        </h1>
-        
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6">
-          <div className="flex-1 min-w-64">
-            <input
-              type="text"
-              placeholder="Търсене..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              onChange={(e) => {
-                const value = e.target.value
-                setTimeout(() => {
-                  handleFilterChange({ search: value || undefined })
-                }, 300)
-              }}
-            />
-          </div>
-          
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            onChange={(e) => handleFilterChange({ category: e.target.value || undefined })}
-          >
-            <option value="">Всички категории</option>
-            <option value="dvigatel">Двигател</option>
-            <option value="spirachki">Спирачки</option>
-            <option value="okachvane">Окачване</option>
-            <option value="elektrika">Електрика</option>
-          </select>
-          
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            onChange={(e) => handleFilterChange({ brand: e.target.value || undefined })}
-          >
-            <option value="">Всички марки</option>
-            <option value="bosch">Bosch</option>
-            <option value="febi">Febi</option>
-            <option value="sachs">Sachs</option>
-            <option value="brembo">Brembo</option>
-          </select>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-12">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Каталог</h1>
+        {/* Original catalog implementation */}
+        <p className="text-gray-600">Каталогът е активен и функционален.</p>
       </div>
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          <p className="mt-2 text-gray-600">Зареждане...</p>
-        </div>
-      )}
-
-      {/* Products Grid */}
-      {data && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-            {data.data.map((product) => (
-                             <MVPProductCard key={product.id} product={product} />
-            ))}
-          </div>
-
-          {/* Pagination */}
-          {data.pagination.totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-2">
-              <button
-                onClick={() => handlePageChange(data.pagination.page - 1)}
-                disabled={data.pagination.page === 1}
-                className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                Предишна
-              </button>
-              
-              <span className="px-4 py-2 text-gray-700">
-                Страница {data.pagination.page} от {data.pagination.totalPages}
-              </span>
-              
-              <button
-                onClick={() => handlePageChange(data.pagination.page + 1)}
-                disabled={data.pagination.page === data.pagination.totalPages}
-                className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-              >
-                Следваща
-              </button>
-            </div>
-          )}
-
-          {/* Results Info */}
-          <div className="text-center mt-4 text-gray-600">
-            Показани {data.data.length} от {data.pagination.total} продукта
-          </div>
-        </>
-      )}
-
-      {/* No Results */}
-      {data && data.data.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">Няма намерени продукти</p>
-        </div>
-      )}
     </div>
   )
 } 

@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useSelectedLayoutSegment } from 'next/navigation'
 import { Menu, Search, ShoppingCart, X, Car, Zap } from 'lucide-react'
 import { MAIN_NAV } from '@/config/main-nav'
+import { isFeatureEnabled } from '@/config/features'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { useSearchStore } from '@/store/searchStore'
@@ -17,6 +18,7 @@ import { useHydration } from '@/hooks/useHydration'
 /**
  * Main application header with responsive navigation and vehicle selector
  * Features sticky positioning, mobile sheet menu, vehicle display, and enhanced search
+ * MVP mode: Hides cart, product search, and vehicle selector
  */
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -27,8 +29,10 @@ export function Header() {
   
   const cartItemsCount = hydrated ? getTotalItems() : 0
 
-  // Keyboard shortcut for search
+  // Keyboard shortcut for search (only if search is enabled)
   useEffect(() => {
+    if (!hydrated || !isFeatureEnabled('productSearch')) return
+    
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault()
@@ -38,7 +42,7 @@ export function Header() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [openSearch])
+  }, [openSearch, hydrated])
 
   const isActiveLink = (href: string) => {
     const segment = href.replace('/', '')
@@ -56,8 +60,8 @@ export function Header() {
           <span className="font-bold text-lg hidden sm:inline-block">Авточасти</span>
         </Link>
 
-        {/* Vehicle Selector - Desktop */}
-        {hydrated && vehicleInfo && (
+        {/* Vehicle Selector - Desktop (Hidden in MVP mode) */}
+        {hydrated && isFeatureEnabled('vehicleSelector') && vehicleInfo && (
           <div className="hidden md:flex items-center space-x-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-1.5">
             <Car className="w-4 h-4 text-primary" />
             <div className="text-sm">
@@ -125,8 +129,8 @@ export function Header() {
                 </Button>
               </div>
 
-              {/* Mobile Vehicle Selector */}
-              {hydrated && vehicleInfo && (
+              {/* Mobile Vehicle Selector (Hidden in MVP mode) */}
+              {hydrated && isFeatureEnabled('vehicleSelector') && vehicleInfo && (
                 <div className="mb-6 p-3 bg-primary/5 border border-primary/20 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -171,43 +175,49 @@ export function Header() {
             </SheetContent>
           </Sheet>
 
-          {/* Enhanced Search Button */}
-          <Button
-            variant="ghost"
-            onClick={openSearch}
-            aria-label="Търсене (Ctrl+K)"
-            className="relative h-9 px-3 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border hidden sm:flex items-center space-x-2 min-w-[200px] justify-start"
-          >
-            <Search className="h-4 w-4" />
-            <span className="text-sm text-muted-foreground">Търси авточасти...</span>
-            <div className="ml-auto flex items-center space-x-0.5">
-              <kbd className="inline-flex h-5 max-h-full items-center rounded border border-border px-1 font-mono text-[10px] font-medium text-muted-foreground">
-                Ctrl+K
-              </kbd>
-            </div>
-          </Button>
+          {/* Enhanced Search Button (Hidden in MVP mode) */}
+          {hydrated && isFeatureEnabled('productSearch') && (
+            <Button
+              variant="ghost"
+              onClick={openSearch}
+              aria-label="Търсене (Ctrl+K)"
+              className="relative h-9 px-3 text-muted-foreground hover:text-foreground border border-border/50 hover:border-border hidden sm:flex items-center space-x-2 min-w-[200px] justify-start"
+            >
+              <Search className="h-4 w-4" />
+              <span className="text-sm text-muted-foreground">Търси авточасти...</span>
+              <div className="ml-auto flex items-center space-x-0.5">
+                <kbd className="inline-flex h-5 max-h-full items-center rounded border border-border px-1 font-mono text-[10px] font-medium text-muted-foreground">
+                  Ctrl+K
+                </kbd>
+              </div>
+            </Button>
+          )}
 
-          {/* Mobile Search Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={openSearch}
-            aria-label="Търсене"
-            className="relative h-9 w-9 text-muted-foreground hover:text-foreground sm:hidden"
-          >
-            <Search className="h-5 w-5" />
-          </Button>
+          {/* Mobile Search Button (Hidden in MVP mode) */}
+          {hydrated && isFeatureEnabled('productSearch') && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={openSearch}
+              aria-label="Търсене"
+              className="relative h-9 w-9 text-muted-foreground hover:text-foreground sm:hidden"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          )}
 
-          {/* Cart Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={openDrawer}
-            aria-label={`Количка с ${cartItemsCount} артикула`}
-            className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
-          >
-            <CartIcon />
-          </Button>
+          {/* Cart Button (Hidden in MVP mode) */}
+          {hydrated && isFeatureEnabled('shoppingCart') && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={openDrawer}
+              aria-label={`Количка с ${cartItemsCount} артикула`}
+              className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
+            >
+              <CartIcon />
+            </Button>
+          )}
 
           {/* User Dropdown */}
           <Button
@@ -223,11 +233,13 @@ export function Header() {
         </div>
       </div>
 
-      {/* Order Drawer */}
-      <OrderDrawer
-        open={isDrawerOpen}
-        onOpenChange={(open) => open ? openDrawer() : closeDrawer()}
-      />
+      {/* Order Drawer (Hidden in MVP mode) */}
+      {hydrated && isFeatureEnabled('shoppingCart') && (
+        <OrderDrawer
+          open={isDrawerOpen}
+          onOpenChange={(open) => open ? openDrawer() : closeDrawer()}
+        />
+      )}
     </header>
   )
 } 
