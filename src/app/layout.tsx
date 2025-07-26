@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { Header } from '@/components/Header/Header'
-import { SearchDialog } from '@/components/SearchDialog/SearchDialog'
+// import { SearchDialog } from '@/components/SearchDialog/SearchDialog' // Removed for request-only MVP
 import { GlobalKeyboardShortcuts } from '@/components/GlobalKeyboardShortcuts'
 import Footer from '@/components/Footer/Footer'
 import { ToastContainer } from '@/components/ui/Toast'
@@ -48,9 +48,7 @@ export default async function RootLayout({
                 <Header />
               </ErrorBoundary>
 
-              <ErrorBoundary>
-                <SearchDialog />
-              </ErrorBoundary>
+              {/* SearchDialog removed for request-only MVP */}
 
               <ErrorBoundary>
                 <GlobalKeyboardShortcuts />

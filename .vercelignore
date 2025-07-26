@@ -44,6 +44,11 @@ src/components/RelatedProducts/
 # exclude legacy search API
 src/app/api/search/
 
+# ⛔ legacy search dialog (disabled for request‑only MVP)
+src/components/SearchDialog/
+src/services/searchService.ts
+src/store/searchStore.ts
+
 # ⛔ legacy catalog (disabled for request‑only MVP)
 src/app/categories/
 src/app/products/
