@@ -52,6 +52,10 @@ src/store/searchStore.ts
 # ⛔ legacy catalog (disabled for request‑only MVP)
 src/app/categories/
 src/app/products/
+src/app/brands/
+src/app/debug/
+src/app/order/
+src/app/success/
 src/components/ProductCard/
 src/components/RelatedProducts/
 src/components/BrandDetail/

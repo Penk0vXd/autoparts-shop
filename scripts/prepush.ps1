@@ -45,8 +45,8 @@ try {
     Write-Host $buildOutput
     
     if ($buildExitCode -ne 0) {
-        # Check if errors are only from expected excluded pages
-        $expectedErrors = @("/brands", "/debug", "/order", "/success", "/admin/data", "/admin/product-images", "/cart")
+        # Check if errors are only from expected excluded pages (must match .vercelignore)
+        $expectedErrors = @("/brands", "/debug", "/order", "/success", "/admin/data", "/admin/product-images", "/cart", "/categories", "/products")
         
         $hasUnexpectedErrors = $false
         $lines = $buildOutput -split "`n"
