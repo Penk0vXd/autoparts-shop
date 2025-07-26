@@ -18,7 +18,6 @@ const RequestSchema = z.object({
   year: z.string().max(4).optional().or(z.literal('')),
   engine: z.string().max(100).optional().or(z.literal('')),
   part_text: z.string().min(10, 'Описанието трябва да е поне 10 символа').max(1000),
-  'h-captcha-response': z.string().min(1, 'Captcha е задължителна'),
   honeypot: z.string().max(0, 'Spam detected'), // Should be empty
 })
 
@@ -161,7 +160,6 @@ export async function POST(request: NextRequest) {
       year: formData.get('year') as string || '',
       engine: formData.get('engine') as string || '',
       part_text: formData.get('part_text') as string,
-      'h-captcha-response': formData.get('h-captcha-response') as string,
       honeypot: formData.get('honeypot') as string || '',
     }
 
@@ -179,14 +177,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // 🤖 Verify hCaptcha
-    const captchaValid = await verifyCaptcha(validatedData['h-captcha-response'])
-    if (!captchaValid) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Captcha верификацията неуспешна' 
-      }, { status: 400 })
-    }
+    // 🤖 hCaptcha verification removed for MVP
 
     // 📎 Validate file if uploaded
     if (file && file.size > 0) {

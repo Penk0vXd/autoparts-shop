@@ -1,25 +1,14 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 
-// 🤖 Dynamic import for hCaptcha to avoid SSR issues (install: npm install @hcaptcha/react-hcaptcha)
-const HCaptcha = dynamic(() => import('@hcaptcha/react-hcaptcha').catch(() => ({ 
-  default: () => <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-    <p className="text-yellow-700">hCaptcha not available. Install @hcaptcha/react-hcaptcha package.</p>
-  </div>
-})), { 
-  ssr: false,
-  loading: () => <div className="h-20 flex items-center justify-center">Loading captcha...</div>
-})
+// 🤖 hCaptcha removed for MVP - will be re-added later
 
 export default function RequestPage() {
   const router = useRouter()
-  const captchaRef = useRef<{ resetCaptcha: () => void } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [captchaToken, setCaptchaToken] = useState<string>('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   // 📋 Form submission handler
@@ -30,11 +19,6 @@ export default function RequestPage() {
 
     const formData = new FormData(e.currentTarget)
     
-    // Add captcha token
-    if (captchaToken) {
-      formData.append('h-captcha-response', captchaToken)
-    }
-
     // Add file if selected
     if (selectedFile) {
       formData.append('attachment', selectedFile)
@@ -61,22 +45,10 @@ export default function RequestPage() {
         } else {
           setErrors({ general: result.error || 'Възникна грешка' })
         }
-        
-        // Reset captcha on error
-        if (captchaRef.current) {
-          captchaRef.current.resetCaptcha()
-          setCaptchaToken('')
-        }
       }
     } catch (error) {
       console.error('Submission error:', error)
       setErrors({ general: 'Грешка в мрежата. Моля опитайте отново.' })
-      
-      // Reset captcha on error
-      if (captchaRef.current) {
-        captchaRef.current.resetCaptcha()
-        setCaptchaToken('')
-      }
     } finally {
       setIsSubmitting(false)
     }
@@ -338,30 +310,13 @@ export default function RequestPage() {
               </div>
             </div>
 
-            {/* 🤖 hCaptcha */}
-            <div>
-              <div className="flex justify-center">
-                {/* @ts-expect-error HCaptcha ref prop types mismatch */}
-                <HCaptcha
-                  ref={captchaRef}
-                  sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
-                  onVerify={(token) => setCaptchaToken(token)}
-                  onExpire={() => setCaptchaToken('')}
-                  onError={() => setCaptchaToken('')}
-                />
-              </div>
-              {errors['h-captcha-response'] && (
-                <p className="text-red-500 text-sm mt-2 text-center">
-                  {errors['h-captcha-response']}
-                </p>
-              )}
-            </div>
+            {/* 🤖 hCaptcha removed for MVP - will be re-added later */}
 
             {/* 🚀 Submit Button */}
             <div className="text-center pt-6">
               <button
                 type="submit"
-                disabled={isSubmitting || !captchaToken}
+                disabled={isSubmitting}
                 className="w-full md:w-auto px-12 py-4 bg-red-600 text-white text-xl font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 {isSubmitting ? (
