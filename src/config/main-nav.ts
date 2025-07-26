@@ -7,7 +7,6 @@ export const MAIN_NAV = [
   
   // Core MVP navigation - always shown
   { href: "/brands", label: "Марки" },
-  { href: "/inquiry", label: "Заявка за част" },
   { href: "/contact", label: "Контакт" },
   { href: "/about", label: "За нас" },
 ] as const

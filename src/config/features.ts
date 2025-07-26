@@ -20,6 +20,7 @@ export const FEATURES = {
   
   // Admin features
   admin: true,
+  adminRequests: true,
 } as const
 
 export type FeatureFlag = keyof typeof FEATURES

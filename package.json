@@ -19,6 +19,7 @@
     "docker:seed": "docker compose --profile seed up db-seed --build"
   },
   "dependencies": {
+    "@hcaptcha/react-hcaptcha": "^1.12.0",
     "@heroicons/react": "^2.1.0",
     "@hookform/resolvers": "^5.1.1",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -27,7 +28,7 @@
     "@tailwindcss/line-clamp": "^0.4.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.16.0",
+    "framer-motion": "^12.23.9",
     "lucide-react": "^0.513.0",
     "next": "14.2.0",
     "next-intl": "^3.15.0",
@@ -40,12 +41,13 @@
     "swr": "^2.2.5",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.22.4",
+    "zod": "^3.25.76",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^15.0.0",
+    "@types/hcaptcha__react-hcaptcha": "^0.1.8",
     "@types/jest": "^29.5.0",
     "@types/node": "^20.12.0",
     "@types/react": "^18.2.0",

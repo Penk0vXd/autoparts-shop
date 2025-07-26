@@ -84,4 +84,15 @@ export function handleDbError(error: any, context = 'Database operation') {
   
   console.error(`${context}:`, error)
   return { data: null, error: error.message || 'Database error' }
+}
+
+// Legacy auth functions - stubs for compatibility
+export async function requireServerAuth() {
+  // Stub implementation for legacy compatibility
+  return null
+}
+
+export async function isAdmin() {
+  // Stub implementation for legacy compatibility
+  return false
 } 

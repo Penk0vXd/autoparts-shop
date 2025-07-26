@@ -232,17 +232,28 @@ export default function HomePage() {
                 </p>
               </div>
               
-              {/* Enhanced main CTA */}
+              {/* Enhanced main CTA - Sacred Request Button */}
               <div className="mb-16">
                 <Link
-                  href={homepageConfig.heroCTALink}
-                  className="group inline-flex items-center bg-gradient-to-r from-red-600 to-red-700 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-2xl hover:shadow-red-500/25 hover:-translate-y-1"
+                  href="/inquiry"
+                  className="group inline-flex items-center bg-gradient-to-r from-red-600 to-red-700 text-white px-12 py-6 rounded-2xl font-bold text-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-2xl hover:shadow-red-500/25 hover:-translate-y-2 border-4 border-white/20"
                 >
-                  {homepageConfig.heroCTA}
-                  <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  🚀 Изпрати заявка сега
+                  <svg className="ml-3 w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </Link>
+                
+                {/* Secondary CTA */}
+                <div className="mt-6 text-white/90">
+                  <span className="text-lg">или позвънете директно: </span>
+                  <a 
+                    href="tel:+359888123456" 
+                    className="text-white font-bold text-xl hover:text-red-200 transition-colors"
+                  >
+                    📞 0888 123 456
+                  </a>
+                </div>
               </div>
               
               {/* Enhanced Benefits Grid - White/Red Theme */}

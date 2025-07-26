@@ -252,14 +252,14 @@ export function Hero({ className = '' }: HeroProps) {
           
           {/* CTA Buttons with Advanced Effects */}
           <div className={`flex flex-col sm:flex-row gap-4 justify-center mb-16 transform transition-all duration-1000 delay-900 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-            {/* Primary CTA - Masterpiece Button with Glow */}
-            <button
-              onClick={handleVehicleSelectionClick}
-              className="group relative w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-10 py-5 text-lg rounded-full shadow-2xl transform transition-all duration-300 hover:scale-105 hover:shadow-red-500/50 focus:outline-none focus:ring-4 focus:ring-red-500/50 active:scale-95 overflow-hidden animate-glow"
+            {/* Primary CTA - Sacred Request Button */}
+            <Link
+              href="/inquiry"
+              className="group relative w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-12 py-6 text-xl rounded-full shadow-2xl transform transition-all duration-300 hover:scale-105 hover:shadow-red-500/50 focus:outline-none focus:ring-4 focus:ring-red-500/50 active:scale-95 overflow-hidden animate-glow inline-flex items-center justify-center"
               style={{
                 boxShadow: '0 20px 40px rgba(211, 47, 47, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 20px rgba(211, 47, 47, 0.5)'
               }}
-              aria-label="Изберете вашия автомобил за намиране на точните части"
+              aria-label="Изпратете заявка за авточасти и получете експертна консултация"
             >
               {/* Button Shine Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 group-hover:animate-shine" />
@@ -269,33 +269,29 @@ export function Hero({ className = '' }: HeroProps) {
               
               {/* Icon with Rotation */}
               <div className="flex items-center justify-center gap-3 relative z-10">
-                <svg className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Изберете вашия автомобил</span>
+                <span className="text-2xl group-hover:scale-125 transition-transform duration-300">🚀</span>
+                <span>Изпрати заявка сега</span>
               </div>
               
               {/* Ripple Effect */}
               <div className="absolute inset-0 rounded-full bg-white/20 scale-0 group-active:scale-100 transition-transform duration-300" />
-            </button>
+            </Link>
             
-            {/* Secondary CTA - Glass Morphism with Distortion */}
-            <Link 
-              href="/catalog"
-              className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 text-lg font-semibold text-red-600 bg-white/80 backdrop-blur-sm border-2 border-red-200 rounded-full shadow-xl hover:bg-white hover:border-red-300 hover:shadow-2xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-500/50 active:scale-95 overflow-hidden"
+            {/* Secondary CTA - Phone Contact */}
+            <a 
+              href="tel:+359888123456"
+              className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 text-lg font-semibold text-red-600 bg-white/90 backdrop-blur-sm border-2 border-red-200 rounded-full shadow-xl hover:bg-white hover:border-red-300 hover:shadow-2xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-500/50 active:scale-95 overflow-hidden"
               style={{
                 boxShadow: '0 8px 32px rgba(211, 47, 47, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.2) inset'
               }}
-              aria-label="Разгледайте пълния каталог с авточасти"
+              aria-label="Позвънете директно за спешни случаи и консултации"
             >
               {/* Animated Background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-red-100/50 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+              <div className="absolute inset-0 bg-gradient-to-r from-green-50/50 to-green-100/50 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
               
-              <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform duration-300 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              <span className="relative z-10">Виж каталога</span>
-            </Link>
+              <span className="text-2xl group-hover:animate-bounce relative z-10">📞</span>
+              <span className="relative z-10">0888 123 456</span>
+            </a>
           </div>
           
           {/* Trust Indicators with 3D Hover Effects */}

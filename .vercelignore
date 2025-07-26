@@ -1,89 +1,97 @@
-# Dependencies
-/node_modules
-/.pnp
-.pnp.js
+# 🚀 VERCELIGNORE - Files to exclude from Vercel deployment
 
-# Testing
-/coverage
+# 🗃️ Database & SQL Files
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+
+# 📄 Documentation & Markdown Files
+*.md
+*.MD
+README*
+CHANGELOG*
+LICENSE*
+CONTRIBUTING*
+
+# 🔐 Environment Examples (keep .env.example for reference)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 🏗️ Development Files
+/src/**/*.test.ts
+/src/**/*.test.tsx
+/src/**/*.spec.ts
+/src/**/*.spec.tsx
 **/__tests__/**
-**/*.test.ts
-**/*.test.tsx
-**/*.spec.ts
-**/*.spec.tsx
-jest.config.js
-jest.setup.js
+**/tests/**
 
-# Next.js
-/.next/
-/out/
+# 📦 Dependencies & Lock Files
+/node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# Production
-/build
+# 🧪 Testing & Coverage
+/coverage/
+jest.config.*
+*.tsbuildinfo
 
-# Misc
-.DS_Store
-*.pem
-
-# Debug
+# 📊 Logs & Debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local env files
-.env*.local
-.env
-.env.docker
-
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-
-# IDE
+# 💻 IDE & Editor Files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
+# 📱 OS Files
+.DS_Store
 Thumbs.db
 
-# Docker
-docker-compose.override.yml
-Dockerfile*
+# 🎨 Design & Assets (if not needed in production)
+*.psd
+*.sketch
+*.fig
 
-# Logs
-logs
-*.log
-
-# Supabase temp files
-/supabase/.temp/
-/supabase/logs/
-
-# Cache directories
-.cache
-.parcel-cache
-.fusebox/
-.serverless
-.nyc_output
-
-# SQL files and database scripts
-*.sql
-/scripts/
-
-# Documentation
-README.md
-*.md
-/docs/
-
-# Development files
+# 🔧 Config Files (development only)
 .eslintrc*
 .prettierrc*
+tsconfig.json
+next.config.js
 
-# Seed files
-seed.ts
-add-product.ts
+# 📂 Scripts & Utils
+/scripts/
+/utils/
+/tools/
 
-# Git
-.git/
-.gitignore
-.gitattributes 
+# 🗑️ Cleanup Scripts
+drop_*.sql
+cleanup_*.sql
+
+# 🔍 Diagnostic Files
+check_*.sql
+safe_check_*.sql
+
+# 📋 Documentation Folders
+/docs/
+/documentation/
+
+# 🧹 Temporary & Cache
+.cache/
+.tmp/
+tmp/
+temp/
+
+# 🎯 Specific Files
+supabase_schema.sql
+drop_requests.sql
+check_requests_status.sql
+safe_check_requests.sql 

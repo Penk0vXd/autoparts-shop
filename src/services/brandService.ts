@@ -315,4 +315,9 @@ export async function searchBrands(
       .filter(b => b.name.toLowerCase().includes(searchTerm))
       .slice(0, limit)
   }
-} 
+}
+
+/**
+ * Alias for getBrand - for compatibility with API routes
+ */
+export const getBrandBySlug = getBrand 
