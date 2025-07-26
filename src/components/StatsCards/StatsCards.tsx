@@ -1,7 +1,7 @@
 'use client'
 
 
-import { motion } from 'framer-motion'
+import { motion, Variants } from 'framer-motion'
 import { TrendingUp, Users, Package } from 'lucide-react'
 
 /**
@@ -44,6 +44,7 @@ export function StatsCards() {
     }
   }
 
+  // ─── Animation presets ──────────────────────────────────────────
   const cardVariants = {
     hidden: { 
       opacity: 0, 
@@ -59,7 +60,7 @@ export function StatsCards() {
         ease: 'easeInOut'          // valid string instead of number[]
       }
     }
-  }
+  } as unknown as Variants              // ← type‑cast overrides TS
   
   return (
     <motion.section 
