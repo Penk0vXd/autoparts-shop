@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { Hero } from '@/components/Hero/Hero'
 
 export const metadata: Metadata = {
   title: 'Авточасти | Заявка за части',
@@ -10,25 +11,8 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* 🎯 Hero Section */}
-      <div className="bg-white pt-20 pb-16">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Професионални <span className="text-red-600">авточасти</span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Не намирате нужната част? Нашите специалисти ще намерят точно това, което търсите.
-          </p>
-          
-          {/* 🚀 Main CTA */}
-          <Link
-            href="/request"
-            className="inline-block px-12 py-4 bg-red-600 text-white text-xl font-semibold rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            Изпрати заявка
-          </Link>
-        </div>
-      </div>
+      {/* 🎯 Beautiful Hero Section */}
+      <Hero />
 
       {/* ✨ Features Section */}
       <div className="bg-gray-50 py-16">

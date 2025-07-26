@@ -102,9 +102,4 @@ src/app/admin/product-images/
 src/app/cart/
 src/app/debug/
 src/app/order/
-
-# 🚫 Exclude Broken Components
-src/components/Hero/
-src/components/ProductCard/
-src/components/CarSelection/
-src/components/MVPVehicleSelector/ 
+src/app/vehicle-selector/
