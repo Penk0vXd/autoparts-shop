@@ -36,3 +36,6 @@ src/app/success/
 src/components/ProductCard/
 src/components/CarSelection/
 src/components/MVPVehicleSelector/
+
+# legacy catalog code (excluded)
+src/components/RelatedProducts/
