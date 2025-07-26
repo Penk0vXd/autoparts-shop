@@ -56,7 +56,7 @@ export function StatsCards() {
       scale: 1,
       transition: {
         duration: 0.6,
-        ease: [0.25, 0.25, 0, 1]
+        ease: 'easeInOut'          // valid string instead of number[]
       }
     }
   }
