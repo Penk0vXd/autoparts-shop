@@ -94,4 +94,9 @@ temp/
 supabase_schema.sql
 drop_requests.sql
 check_requests_status.sql
-safe_check_requests.sql 
+safe_check_requests.sql
+
+# 🚫 Exclude Broken Pages (until dependencies fixed)
+src/app/admin/data/
+src/app/admin/product-images/
+src/app/cart/ 
