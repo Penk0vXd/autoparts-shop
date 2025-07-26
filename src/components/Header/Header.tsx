@@ -9,7 +9,7 @@ import { MAIN_NAV } from '@/config/main-nav'
 import { isFeatureEnabled } from '@/config/features'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { useSearchStore } from '@/store/searchStore'
+// import { useSearchStore } from '@/store/searchStore' // ⛔ disabled for request-only MVP
 import { useCartStore } from '@/store/cartStore'
 import { CartIcon } from '@/components/ui/CartIcon'
 import { OrderDrawer } from '@/components/OrderDrawer/OrderDrawer'
@@ -24,7 +24,10 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const hydrated = useHydration()
   const selectedSegment = useSelectedLayoutSegment()
-  const { open: openSearch, vehicleInfo, setVehicleInfo } = useSearchStore()
+  // const { open: openSearch, vehicleInfo, setVehicleInfo } = useSearchStore() // ⛔ disabled
+  const openSearch = () => {} // no-operation placeholder
+  const vehicleInfo = null as any // no vehicle info for request-only MVP
+  const setVehicleInfo = (_: any) => {} // no-operation placeholder
   const { getTotalItems, isDrawerOpen, openDrawer, closeDrawer } = useCartStore()
   
   const cartItemsCount = hydrated ? getTotalItems() : 0
@@ -36,7 +39,7 @@ export function Header() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault()
-        openSearch()
+        // openSearch() // ⛔ disabled for request-only MVP
       }
     }
 
