@@ -7,15 +7,34 @@ Write-Host "━━━━━━━━━━━━━━━━━━━━━━�
 # Continue on errors, handle them explicitly
 $ErrorActionPreference = "Continue"
 
-# Ensure Node.js is in PATH for Git hooks
-$env:PATH = "$env:PATH;$env:APPDATA\npm;$env:ProgramFiles\nodejs;${env:ProgramFiles(x86)}\nodejs"
+# Robust Node.js PATH resolution for Git hooks
+$possibleNodePaths = @(
+    "$env:ProgramFiles\nodejs",
+    "${env:ProgramFiles(x86)}\nodejs",
+    "$env:LOCALAPPDATA\Microsoft\WindowsApps",
+    "$env:APPDATA\npm"
+)
+
+foreach ($path in $possibleNodePaths) {
+    if (Test-Path "$path\node.exe" -or Test-Path "$path\npm.cmd") {
+        $env:PATH = "$path;$env:PATH"
+    }
+}
+
+# Also try to find Node.js in system PATH
+$nodeExe = Get-Command node.exe -ErrorAction SilentlyContinue
+if ($nodeExe) {
+    $nodePath = Split-Path $nodeExe.Source
+    $env:PATH = "$nodePath;$env:PATH"
+}
 
 # Verify Node.js is available
 try {
-    $nodeVersion = node --version 2>$null
+    $nodeVersion = & node --version 2>$null
     Write-Host "📦 Using Node.js $nodeVersion" -ForegroundColor Gray
 } catch {
     Write-Host "❌ Node.js not found in PATH" -ForegroundColor Red
+    Write-Host "💡 Current PATH: $env:PATH" -ForegroundColor Yellow
     Write-Host "💡 Please ensure Node.js is installed and accessible" -ForegroundColor Yellow
     exit 1
 }
@@ -38,7 +57,7 @@ try {
     Write-Host "    (This matches exactly what Vercel will do)" -ForegroundColor Gray
 
     # Capture build output to analyze errors
-    $buildOutput = npm run build 2>&1 | Out-String
+    $buildOutput = & cmd /c "npm run build" 2>&1 | Out-String
     $buildExitCode = $LASTEXITCODE
     
     # Display the build output
@@ -87,7 +106,7 @@ try {
 
     # Step 3: TypeScript check
     Write-Host "🔍  Running TypeScript check..." -ForegroundColor Yellow
-    npx tsc --noEmit --skipLibCheck
+    & cmd /c "npx tsc --noEmit --skipLibCheck"
     if ($LASTEXITCODE -ne 0) {
         Write-Host ""
         Write-Host "❌  TYPESCRIPT ERRORS FOUND" -ForegroundColor Red

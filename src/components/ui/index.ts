@@ -6,7 +6,8 @@ export { Card } from './Card'
 export { SafeImage, ProductImagePlaceholder, ProductImageError } from './SafeImage'
 export { LoadingSpinner, CategoryGridSkeleton } from './LoadingSpinner'
 export { CartIcon } from './CartIcon'
-export { Breadcrumb, BreadcrumbItem } from './Breadcrumb'
+export { Breadcrumb, BreadcrumbStructuredData, MobileBreadcrumb } from './Breadcrumb'
+export type { BreadcrumbItem } from './Breadcrumb'
 export { Toast, addToast, ToastContainer } from './Toast'
 export { 
   Dialog, 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ChevronRightIcon, HomeIcon } from '@heroicons/react/24/outline'
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   label: string
   href: string
 }
