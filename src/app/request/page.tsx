@@ -341,6 +341,7 @@ export default function RequestPage() {
             {/* 🤖 hCaptcha */}
             <div>
               <div className="flex justify-center">
+                {/* @ts-expect-error HCaptcha ref prop types mismatch */}
                 <HCaptcha
                   ref={captchaRef}
                   sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY!}
