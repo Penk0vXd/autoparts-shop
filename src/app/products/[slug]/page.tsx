@@ -1,7 +1,6 @@
-import { getProductBySlug, getRelatedProducts } from '@/services/productService'
+import { getProductBySlug } from '@/services/productService'
 import { ProductHero } from '@/components/Product/ProductHero'
 import { ProductTabs } from '@/components/Product/ProductTabs'
-import { RelatedProducts } from '@/components/RelatedProducts/RelatedProducts'
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 
@@ -42,12 +41,6 @@ export default async function ProductPage({ params }: Props) {
   if (!product) {
     notFound()
   }
-
-  const relatedProducts = await getRelatedProducts(
-    product.id, 
-    product.category_id, 
-    product.brand_id
-  )
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -90,15 +83,6 @@ export default async function ProductPage({ params }: Props) {
           {/* Product Tabs */}
           <ProductTabs product={product} />
           
-          {/* Related Products */}
-          <section className="mt-16">
-            <h2 className="text-2xl font-bold text-foreground mb-8">Подобни продукти</h2>
-            <RelatedProducts 
-              productId={product.id} 
-              categoryId={product.category_id} 
-              brandId={product.brand_id} 
-            />
-          </section>
         </div>
       </main>
     </>
