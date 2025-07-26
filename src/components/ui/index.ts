@@ -2,7 +2,7 @@
 // Centralized export point for all UI components
 
 export { Button, buttonVariants } from './button'
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card'
+export { Card } from './Card'
 export { SafeImage, ProductImagePlaceholder, ProductImageError } from './SafeImage'
 export { LoadingSpinner, CategoryGridSkeleton } from './LoadingSpinner'
 export { CartIcon } from './CartIcon'
