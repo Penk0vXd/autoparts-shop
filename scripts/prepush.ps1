@@ -4,8 +4,21 @@
 Write-Host "🛡️  Running guardian pre-push validation..." -ForegroundColor Cyan
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
 
-# Exit on any error
-$ErrorActionPreference = "Stop"
+# Continue on errors, handle them explicitly
+$ErrorActionPreference = "Continue"
+
+# Ensure Node.js is in PATH for Git hooks
+$env:PATH = "$env:PATH;$env:APPDATA\npm;$env:ProgramFiles\nodejs;${env:ProgramFiles(x86)}\nodejs"
+
+# Verify Node.js is available
+try {
+    $nodeVersion = node --version 2>$null
+    Write-Host "📦 Using Node.js $nodeVersion" -ForegroundColor Gray
+} catch {
+    Write-Host "❌ Node.js not found in PATH" -ForegroundColor Red
+    Write-Host "💡 Please ensure Node.js is installed and accessible" -ForegroundColor Yellow
+    exit 1
+}
 
 # Check if we're in a git repository
 if (-not (Test-Path ".git")) {
@@ -25,7 +38,7 @@ try {
     Write-Host "    (This matches exactly what Vercel will do)" -ForegroundColor Gray
 
     # Capture build output to analyze errors
-    $buildOutput = npm run build 2>&1
+    $buildOutput = npm run build 2>&1 | Out-String
     $buildExitCode = $LASTEXITCODE
     
     # Display the build output
@@ -34,10 +47,11 @@ try {
     if ($buildExitCode -ne 0) {
         # Check if errors are only from expected excluded pages
         $expectedErrors = @("/brands", "/debug", "/order", "/success", "/admin/data", "/admin/product-images", "/cart")
-        $buildOutputStr = $buildOutput -join "`n"
         
         $hasUnexpectedErrors = $false
-        foreach ($line in $buildOutput) {
+        $lines = $buildOutput -split "`n"
+        
+        foreach ($line in $lines) {
             if ($line -match "Error occurred prerendering page" -or $line -match "Build failed" -or $line -match "Failed to compile") {
                 # Check if this error is from an expected excluded page
                 $isExpectedError = $false
@@ -98,6 +112,7 @@ try {
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Red
     Write-Host "🚫  Push blocked - unexpected error occurred" -ForegroundColor Red
     Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "💡  Try running the commands manually to debug" -ForegroundColor Yellow
     Write-Host ""
     exit 1
 } 
