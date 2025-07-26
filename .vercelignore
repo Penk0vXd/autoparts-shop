@@ -40,3 +40,6 @@ src/components/MVPVehicleSelector/
 
 # legacy catalog code (excluded)
 src/components/RelatedProducts/
+
+# exclude legacy search API
+src/app/api/search/
