@@ -319,15 +319,38 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
 
     console.log('[API] Saving to Supabase...')
 
-    // Insert into Supabase with error handling
-    const { data, error } = await supabase
-      .from('requests')
-      .insert([{
-        ...dataForDatabase,
-        created_at: new Date().toISOString()
-      }])
-      .select()
-      .single()
+    // Insert into Supabase with error handling and retry
+    let data, error
+    let retryCount = 0
+    const maxRetries = 2
+
+    while (retryCount <= maxRetries) {
+      const result = await supabase
+        .from('requests')
+        .insert([{
+          ...dataForDatabase,
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single()
+
+      data = result.data
+      error = result.error
+
+      if (!error) {
+        break // Success, exit retry loop
+      }
+
+      if (error.code === 'PGRST204' && retryCount < maxRetries) {
+        // Schema cache issue, wait and retry
+        console.log(`[API] Schema cache issue, retrying... (attempt ${retryCount + 1})`)
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
+        retryCount++
+        continue
+      }
+
+      break // Either not a schema issue or max retries reached
+    }
 
     if (error) {
       console.error('[API] Supabase insert error:', error)

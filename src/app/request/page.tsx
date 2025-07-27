@@ -1,15 +1,13 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 
 export default function RequestPage() {
   const router = useRouter()
-  const captchaRef = useRef<{ resetCaptcha: () => void } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [captchaToken, setCaptchaToken] = useState<string>('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   // 📋 Form submission handler
@@ -19,11 +17,6 @@ export default function RequestPage() {
     setErrors({})
 
     const formData = new FormData(e.currentTarget)
-    
-    // Add captcha token
-    if (captchaToken) {
-      formData.append('h-captcha-response', captchaToken)
-    }
 
     // Add file if selected
     if (selectedFile) {
@@ -56,12 +49,7 @@ export default function RequestPage() {
     } catch (error) {
       console.error('Submission error:', error)
       setErrors({ general: 'Грешка в мрежата. Моля опитайте отново.' })
-      
-      // Reset captcha on error
-      if (captchaRef.current) {
-        captchaRef.current.resetCaptcha()
-        setCaptchaToken('')
-      }
+      	
     } finally {
       setIsSubmitting(false)
     }
