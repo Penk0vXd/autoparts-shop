@@ -5,13 +5,33 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 // MVP API Route for Parts Requests with Discord Webhook
-// Works in both local and Vercel environments
+// Works reliably in both local and Vercel environments
 
 interface RequestData {
   full_name: string
   phone: string
   car_details: string
   message: string
+}
+
+interface DiscordEmbed {
+  title: string
+  color: number
+  fields: Array<{
+    name: string
+    value: string
+    inline?: boolean
+  }>
+  timestamp: string
+  footer: {
+    text: string
+  }
+}
+
+interface DiscordPayload {
+  embeds: DiscordEmbed[]
+  username: string
+  avatar_url?: string
 }
 
 // Initialize Supabase client with service role key for server-side operations
@@ -26,17 +46,23 @@ const supabase = createClient(
   }
 )
 
-// Discord webhook function that works in both local and Vercel
-async function sendDiscordNotification(requestData: any, requestId: string) {
+// Enhanced Discord webhook function with better error handling
+async function sendDiscordNotification(requestData: RequestData, requestId: string): Promise<boolean> {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL
   
   if (!webhookUrl) {
-    console.log('Discord webhook URL not configured, skipping notification')
-    return
+    console.log('[Discord] Webhook URL not configured, skipping notification')
+    return false
+  }
+
+  // Validate webhook URL format
+  if (!webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
+    console.error('[Discord] Invalid webhook URL format')
+    return false
   }
 
   try {
-    const embed = {
+    const embed: DiscordEmbed = {
       title: "🚗 Нова заявка за авточасти",
       color: 0xDC2626, // Red color
       fields: [
@@ -57,7 +83,9 @@ async function sendDiscordNotification(requestData: any, requestId: string) {
         },
         { 
           name: "🔧 Описание на частта", 
-          value: requestData.message, 
+          value: requestData.message.length > 1024 
+            ? requestData.message.substring(0, 1021) + '...' 
+            : requestData.message, 
           inline: false 
         },
         { 
@@ -84,28 +112,34 @@ async function sendDiscordNotification(requestData: any, requestId: string) {
       }
     }
 
-    const payload = {
+    const payload: DiscordPayload = {
       embeds: [embed],
-      username: "AutoParts Bot",
-      avatar_url: "https://cdn.discordapp.com/attachments/123456789/123456789/car-icon.png"
+      username: "AutoParts Bot"
     }
+
+    console.log('[Discord] Sending notification to webhook...')
 
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'AutoParts-Store-Bot/1.0'
       },
       body: JSON.stringify(payload)
     })
 
     if (!response.ok) {
-      console.error('Discord webhook failed:', response.status, await response.text())
-    } else {
-      console.log('Discord notification sent successfully')
+      const errorText = await response.text()
+      console.error(`[Discord] Webhook failed with status ${response.status}:`, errorText)
+      return false
     }
+
+    console.log('[Discord] Notification sent successfully')
+    return true
+
   } catch (error) {
-    console.error('Discord webhook error:', error)
-    // Don't fail the request if Discord webhook fails
+    console.error('[Discord] Webhook error:', error)
+    return false
   }
 }
 
@@ -114,8 +148,16 @@ export async function POST(request: NextRequest) {
     // Parse JSON body
     const body: RequestData = await request.json()
     
+    console.log('[API] Received request:', { 
+      full_name: body.full_name ? '***' : 'missing',
+      phone: body.phone ? '***' : 'missing',
+      car_details: body.car_details ? '***' : 'missing',
+      message: body.message ? '***' : 'missing'
+    })
+    
     // Basic validation
     if (!body.full_name || !body.phone || !body.car_details || !body.message) {
+      console.log('[API] Validation failed: missing required fields')
       return NextResponse.json(
         { success: false, error: 'Всички полета са задължителни' },
         { status: 400 }
@@ -145,44 +187,55 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare data for Supabase
-    const requestData = {
+    const requestData: RequestData = {
       full_name: body.full_name.trim(),
       phone: body.phone.trim(),
       car_details: body.car_details.trim(),
-      message: body.message.trim(),
-      created_at: new Date().toISOString()
+      message: body.message.trim()
     }
+
+    console.log('[API] Saving to Supabase...')
 
     // Insert into Supabase
     const { data, error } = await supabase
       .from('requests')
-      .insert([requestData])
+      .insert([{
+        ...requestData,
+        created_at: new Date().toISOString()
+      }])
       .select()
       .single()
 
     if (error) {
-      console.error('Supabase insert error:', error)
+      console.error('[API] Supabase insert error:', error)
       return NextResponse.json(
         { success: false, error: 'Грешка при запазване на заявката. Моля опитайте отново.' },
         { status: 500 }
       )
     }
 
-    // Send Discord notification (works in both local and Vercel)
-    await sendDiscordNotification(requestData, data.id)
+    console.log('[API] Request saved to Supabase with ID:', data.id)
+
+    // Send Discord notification
+    const discordSuccess = await sendDiscordNotification(requestData, data.id)
+    
+    if (!discordSuccess) {
+      console.warn('[API] Discord notification failed, but request was saved successfully')
+    }
 
     // Success response
     return NextResponse.json(
       { 
         success: true, 
         message: 'Заявката е изпратена успешно',
-        id: data.id 
+        id: data.id,
+        discord_sent: discordSuccess
       },
       { status: 200 }
     )
 
   } catch (error) {
-    console.error('API route error:', error)
+    console.error('[API] Route error:', error)
     
     // Handle JSON parsing errors
     if (error instanceof SyntaxError) {

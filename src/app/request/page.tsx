@@ -1,243 +1,344 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-interface FormData {
-  full_name: string
-  phone: string
-  car_details: string
-  message: string
-}
+// 🤖 hCaptcha removed for MVP - will be re-added later
 
 export default function RequestPage() {
-  const [formData, setFormData] = useState<FormData>({
-    full_name: '',
-    phone: '',
-    car_details: '',
-    message: ''
-  })
-  
+  const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 📋 Form submission handler
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setError('')
+    setErrors({})
+
+    const formData = new FormData(e.currentTarget)
+    
+    // Add file if selected
+    if (selectedFile) {
+      formData.append('attachment', selectedFile)
+    }
 
     try {
       const response = await fetch('/api/request', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formData
       })
 
       const result = await response.json()
 
-      if (response.ok && result.success) {
-        setIsSuccess(true)
-        setFormData({
-          full_name: '',
-          phone: '',
-          car_details: '',
-          message: ''
-        })
+      if (result.success) {
+        router.push('/thank-you')
       } else {
-        setError(result.error || 'Something went wrong. Please try again.')
+        if (result.details) {
+          // Handle Zod validation errors
+          const fieldErrors: Record<string, string> = {}
+          result.details.forEach((error: any) => {
+            fieldErrors[error.path[0]] = error.message
+          })
+          setErrors(fieldErrors)
+        } else {
+          setErrors({ general: result.error || 'Възникна грешка' })
+        }
       }
-    } catch (err) {
-      setError('Network error. Please check your connection and try again.')
+    } catch (error) {
+      console.error('Submission error:', error)
+      setErrors({ general: 'Грешка в мрежата. Моля опитайте отново.' })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (isSuccess) {
-    return (
-      <div className="min-h-screen bg-white">
-        {/* Header */}
-        <header className="bg-blue-600 text-white py-8">
-          <div className="max-w-4xl mx-auto px-4 text-center">
-            <Link href="/" className="text-2xl font-bold hover:underline">
-              AutoParts Store
-            </Link>
-          </div>
-        </header>
-
-        {/* Success Message */}
-        <main className="max-w-2xl mx-auto px-4 py-12">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-            <div className="text-6xl mb-4">✅</div>
-            <h1 className="text-3xl font-bold text-green-800 mb-4">
-              Request Submitted Successfully!
-            </h1>
-            <p className="text-lg text-green-700 mb-6">
-              Thank you for your inquiry. Our team will review your request and contact you within 2 business hours.
-            </p>
-            <div className="space-y-4">
-              <Link
-                href="/request"
-                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mr-4"
-                onClick={() => setIsSuccess(false)}
-              >
-                Submit Another Request
-              </Link>
-              <Link
-                href="/"
-                className="inline-block bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-              >
-                Back to Home
-              </Link>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
+  // 📎 File selection handler
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Client-side validation
+      const maxSize = 5 * 1024 * 1024 // 5MB
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
+      
+      if (file.size > maxSize) {
+        setErrors({ file: 'Файлът трябва да е под 5MB' })
+        e.target.value = '' // Clear input
+        return
+      }
+      
+      if (!allowedTypes.includes(file.type)) {
+        setErrors({ file: 'Разрешени са само JPG, PNG и PDF файлове' })
+        e.target.value = '' // Clear input
+        return
+      }
+      
+      setSelectedFile(file)
+      setErrors({ ...errors, file: '' })
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-blue-600 text-white py-8">
+    <div className="min-h-screen bg-white">
+      {/* 🏆 Hero Section */}
+      <div className="bg-white pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <Link href="/" className="text-2xl font-bold hover:underline">
-            AutoParts Store
-          </Link>
-          <p className="text-lg mt-2">Submit Parts Request</p>
-        </div>
-      </header>
-
-      {/* Form */}
-      <main className="max-w-2xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Parts Request Form</h1>
-          <p className="text-gray-600 mb-8">
-            Fill out the form below and our experts will help you find the right part for your vehicle.
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            Заявка за <span className="text-red-600">авточасти</span>
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Попълнете формата и нашите специалисти ще намерят точно това, което търсите
           </p>
+        </div>
+      </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
+      {/* 📝 Form Section */}
+      <div className="max-w-2xl mx-auto px-4 pb-20">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            
+            {/* 🍯 Honeypot (hidden anti-spam field) */}
+            <input
+              type="text"
+              name="honeypot"
+              tabIndex={-1}
+              autoComplete="off"
+              className="absolute left-[-9999px] opacity-0"
+              aria-hidden="true"
+            />
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Full Name */}
+            {/* General Error */}
+            {errors.general && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{errors.general}</p>
+              </div>
+            )}
+
+            {/* 👤 Personal Information */}
             <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                id="full_name"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your full name"
-              />
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+                Лични данни
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Име и фамилия *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                      errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
+                    placeholder="Вашето име"
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Телефон *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                      errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
+                    placeholder="+359 888 123 456"
+                  />
+                  {errors.phone && (
+                    <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                  )}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Имейл (по желание)
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                      errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
+                    placeholder="your@email.com"
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Phone */}
+            {/* 🚗 Vehicle Information */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number *
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your phone number"
-              />
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+                Информация за автомобила
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Марка
+                  </label>
+                  <input
+                    type="text"
+                    name="brand"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="BMW, Mercedes, Audi..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Модел
+                  </label>
+                  <input
+                    type="text"
+                    name="model"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="320i, C200, A4..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Година
+                  </label>
+                  <input
+                    type="text"
+                    name="year"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="2020"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Двигател
+                  </label>
+                  <input
+                    type="text"
+                    name="engine"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="2.0 TDI, 1.8 TSI..."
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Car Details */}
+            {/* 🔧 Part Description */}
             <div>
-              <label htmlFor="car_details" className="block text-sm font-medium text-gray-700 mb-2">
-                Car Details *
-              </label>
-              <input
-                type="text"
-                id="car_details"
-                name="car_details"
-                value={formData.car_details}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., BMW 320i 2018, Mercedes C200 2020"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Include make, model, year, and engine size if known
-              </p>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+                Коя част търсите?
+              </h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Описание на частта *
+                </label>
+                <textarea
+                  name="part_text"
+                  required
+                  rows={6}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none ${
+                    errors.part_text ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                  placeholder="Опишете подробно какво търсите... Например: 'Спирачни накладки за предна ос BMW X3 2018г. Оригинални или качествени заместители. Колата се използва за ежедневно шофиране в градска среда.'"
+                />
+                {errors.part_text && (
+                  <p className="text-red-500 text-sm mt-1">{errors.part_text}</p>
+                )}
+              </div>
             </div>
 
-            {/* Message */}
+            {/* 📎 File Upload */}
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                Part Description / Message *
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                required
-                rows={5}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
-                placeholder="Describe the part you need, any part numbers you have, or additional details that might help us find the right part for you..."
-              />
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+                Прикачете снимка (по желание)
+              </h2>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                <div className="text-center">
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    stroke="currentColor"
+                    fill="none"
+                    viewBox="0 0 48 48"
+                  >
+                    <path
+                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <div className="mt-4">
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <span className="mt-2 block text-sm font-medium text-gray-900">
+                        Изберете файл
+                      </span>
+                      <input
+                        id="file-upload"
+                        name="file-upload"
+                        type="file"
+                        className="sr-only"
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                    <p className="mt-1 text-xs text-gray-500">
+                      JPG, PNG или PDF, максимум 5MB
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedFile && (
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-green-600">
+                      ✓ Избран файл: {selectedFile.name}
+                    </p>
+                  </div>
+                )}
+                
+                {errors.file && (
+                  <p className="text-red-500 text-sm mt-2 text-center">{errors.file}</p>
+                )}
+              </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="pt-4">
+            {/* 🤖 hCaptcha removed for MVP - will be re-added later */}
+
+            {/* 🚀 Submit Button */}
+            <div className="text-center pt-6">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="w-full md:w-auto px-12 py-4 bg-red-600 text-white text-xl font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center space-x-3">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Изпращане...</span>
+                  </div>
+                ) : (
+                  'Изпрати заявка'
+                )}
               </button>
-            </div>
-
-            <div className="text-center pt-4">
-              <Link
-                href="/"
-                className="text-blue-600 hover:text-blue-700 underline"
-              >
-                ← Back to Home
-              </Link>
+              
+              <p className="text-sm text-gray-500 mt-4">
+                Ще получите отговор до 2 часа в работни дни
+              </p>
             </div>
           </form>
         </div>
-
-        {/* Info Section */}
-        <div className="mt-8 bg-blue-50 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 mb-2">What happens next?</h3>
-          <ul className="text-blue-800 space-y-1 text-sm">
-            <li>• Our experts will review your request</li>
-            <li>• We'll search our network of suppliers</li>
-            <li>• You'll receive a response within 2 business hours</li>
-            <li>• Get pricing and availability information</li>
-          </ul>
-        </div>
-      </main>
+      </div>
     </div>
   )
-} 
+}   
