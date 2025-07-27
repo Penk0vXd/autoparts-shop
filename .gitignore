@@ -1,55 +1,60 @@
 # 🚫 GITIGNORE - Files to exclude from version control
+# Optimized for Next.js 14 auto parts store MVP
 
-# 🗃️ Database & SQL Files
+# 🗃️ Database & Local Data
 *.sql
 *.db
 *.sqlite
 *.sqlite3
 
-# 📄 Documentation & Markdown Files
-*.md
-*.MD
+# 📄 Large Documentation (generated)
+CHANGELOG.md
+coverage-report.md
 
-# 🔐 Environment Variables
+# 🔐 Environment & Secrets
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.example
 
-# 🏗️ Next.js Build Files
+# 🏗️ Next.js Build Output
 /.next/
 /out/
 .next
 out
 
-# 📦 Dependencies
+# 📦 Dependencies & Package Managers
 /node_modules/
 /.pnp
 .pnp.js
-
-# 🧪 Testing
-/coverage/
-*.tsbuildinfo
-next-env.d.ts
-
-# 📊 Analytics & Logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+pnpm-debug.log*
 
-# 🔧 Runtime & Cache
-.DS_Store
-*.tgz
-*.tar.gz
+# 🧪 Testing & Coverage
+/coverage/
+*.tsbuildinfo
+next-env.d.ts
+.nyc_output/
+
+# 📊 Analysis & Reports  
+unused-*.txt
+cleanup-report.md
+audit-report.*
+
+# 🔧 Build Tools & Cache
 .cache
 .parcel-cache
+.turbo
+.swc/
 
 # 🚀 Deployment
 .vercel
 .now
+dist/
 
 # 💻 IDE & Editor Files
 .vscode/
@@ -57,28 +62,26 @@ lerna-debug.log*
 *.swp
 *.swo
 *~
-
-# 🎯 TypeScript
-*.tsbuildinfo
-
-# 📱 OS Files
-Thumbs.db
 .DS_Store
+Thumbs.db
 
-# 🔨 Build Tools
-.turbo
-
-# 📂 Temporary Files
-tmp/
-temp/
-.tmp/
+# 🎯 OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+*.pid
+*.seed
+*.pid.lock
 
 # 🎨 Design Files
 *.psd
 *.sketch
 *.fig
+*.xd
 
-# 🧹 Misc
-*.pid
-*.seed
-*.pid.lock 
+# 🧹 Temporary Files
+tmp/
+temp/
+.tmp/
+*.tmp 

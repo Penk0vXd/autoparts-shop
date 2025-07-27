@@ -1,14 +1,8 @@
-# 🚫 Development files
-*.md
-*.sql
-.cursor/
-scripts/
-.eslintrc.json
-.prettierrc
-package-lock.json
-next.config.js
+# 🚫 VERCEL DEPLOYMENT EXCLUSIONS
+# Optimized for MVP auto parts store - keeps ALL product features
 
-# 🚫 Documentation
+# 📝 Development Documentation
+*.md
 README*
 CHANGELOG*
 LICENSE*
@@ -16,47 +10,53 @@ CONTRIBUTING*
 *_GUIDE.md
 *_FIXES.md
 
-# 🚫 Test & Dev
-__tests__/
-*.test.*
-*.spec.*
+# 🧪 Testing & Development Files
+**/__tests__/
+**/*.test.*
+**/*.spec.*
 jest.config.*
 jest.setup.*
+**/coverage/
 
-# 🚫 Exclude Broken Pages (until dependencies fixed)
-src/app/admin/data/
-src/app/admin/product-images/
-src/app/cart/
-src/app/debug/
-src/app/order/
-src/app/brands/
-src/app/success/
-src/app/products/
+# 🎨 Demo Components & Examples  
+**/*Demo.tsx
+**/*Example.tsx
+**/*Playground.tsx
 
-# 🚫 Exclude Broken Components  
-src/components/ProductCard/
-src/components/CarSelection/
-src/components/MVPVehicleSelector/
+# 🛠️ Development Scripts & Tools
+scripts/
+add-product.ts
+seed.ts
+.cursor/
 
-# legacy catalog code (excluded)
-src/components/RelatedProducts/
+# 📦 Build & Dependencies
+node_modules/
+.next/
+out/
+coverage/
 
-# exclude legacy search API
-src/app/api/search/
+# 🔧 Config Files (keep essential ones)
+.eslintrc.json
+.prettierrc
+package-lock.json
+tsconfig.json
+tailwind.config.ts
+next.config.js
 
-# ⛔ legacy search dialog (disabled for request‑only MVP)
-src/components/SearchDialog/
-src/services/searchService.ts
-src/store/searchStore.ts
+# 🗂️ Development Assets
+.git/
+.vscode/
+.idea/
 
-# ⛔ legacy catalog (disabled for request‑only MVP)
-src/app/categories/
-src/app/products/
-src/app/brands/
-src/app/debug/
-src/app/order/
-src/app/success/
-src/components/ProductCard/
-src/components/RelatedProducts/
-src/components/BrandDetail/
-src/components/CategoryPage/
+# 📊 Analysis Reports (from cleanup)
+unused-*.txt
+cleanup-report.md
+
+# ⚠️ DO NOT EXCLUDE THESE (CORE PRODUCT FEATURES):
+# ✅ src/app/products/ - Product pages
+# ✅ src/app/brands/ - Brand catalog  
+# ✅ src/app/order/ - Order functionality
+# ✅ src/app/success/ - Success pages
+# ✅ src/components/ProductCard/ - Essential components
+# ✅ src/components/CarSelection/ - Vehicle selection
+# ✅ src/components/MVPVehicleSelector/ - MVP vehicle selector
