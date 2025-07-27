@@ -199,41 +199,76 @@ async function sendDiscordNotification(requestData: RequestData, requestId: stri
   }
 }
 
+// Helper function to extract data from FormData or JSON
+async function extractRequestData(request: NextRequest): Promise<RequestData> {
+  const contentType = request.headers.get('content-type') || ''
+  
+  if (contentType.includes('multipart/form-data')) {
+    // Handle FormData
+    const formData = await request.formData()
+    
+    // Map form field names to our expected structure
+    const full_name = formData.get('name') as string || ''
+    const phone = formData.get('phone') as string || ''
+    
+    // Combine car details from individual fields
+    const brand = formData.get('brand') as string || ''
+    const model = formData.get('model') as string || ''
+    const year = formData.get('year') as string || ''
+    const engine = formData.get('engine') as string || ''
+    
+    const car_details = [brand, model, year, engine].filter(Boolean).join(' ')
+    
+    const message = formData.get('part_text') as string || ''
+    const file = formData.get('attachment') || null
+    
+    return {
+      full_name,
+      phone,
+      car_details,
+      message,
+      file
+    }
+  } else {
+    // Handle JSON
+    const rawBody = await request.text()
+    console.log('[API] Raw request body:', rawBody)
+    
+    try {
+      const body = JSON.parse(rawBody)
+      return {
+        full_name: body.full_name || body.name || '',
+        phone: body.phone || '',
+        car_details: body.car_details || '',
+        message: body.message || body.part_text || '',
+        file: body.file || null
+      }
+    } catch (parseError) {
+      console.error('[API] JSON parsing error:', parseError)
+      throw new Error('Invalid JSON format in request body')
+    }
+  }
+}
+
 // Main POST handler with comprehensive error handling and Zod validation
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
   console.log('[API] POST /api/request - Request received')
   
   try {
-    // Log raw request for debugging
-    const rawBody = await request.text()
-    console.log('[API] Raw request body:', rawBody)
+    // Extract data from request (FormData or JSON)
+    const requestData = await extractRequestData(request)
     
-    // Parse JSON body with proper error handling
-    let body: RequestData
-    try {
-      body = JSON.parse(rawBody)
-    } catch (parseError) {
-      console.error('[API] JSON parsing error:', parseError)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid JSON format in request body' 
-        },
-        { status: 400 }
-      )
-    }
-    
-    console.log('[API] Parsed request data:', { 
-      full_name: body.full_name ? '***' : 'missing',
-      phone: body.phone ? '***' : 'missing',
-      car_details: body.car_details ? '***' : 'missing',
-      message: body.message ? '***' : 'missing',
-      file: body.file ? 'present' : 'missing'
+    console.log('[API] Extracted request data:', { 
+      full_name: requestData.full_name ? '***' : 'missing',
+      phone: requestData.phone ? '***' : 'missing',
+      car_details: requestData.car_details ? '***' : 'missing',
+      message: requestData.message ? '***' : 'missing',
+      file: requestData.file ? 'present' : 'missing'
     })
     
     // Server-side validation with Zod
     try {
-      apiRequestSchema.parse(body)
+      apiRequestSchema.parse(requestData)
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         console.log('[API] Validation failed:', validationError.errors)
@@ -252,12 +287,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     }
     
     // Prepare data for database
-    const requestData: RequestData = {
-      full_name: body.full_name.trim(),
-      phone: body.phone.trim(),
-      car_details: body.car_details.trim(),
-      message: body.message.trim(),
-      file: body.file
+    const dataForDatabase = {
+      full_name: requestData.full_name.trim(),
+      phone: requestData.phone.trim(),
+      car_details: requestData.car_details.trim(),
+      message: requestData.message.trim()
     }
 
     console.log('[API] Saving to Supabase...')
@@ -266,10 +300,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     const { data, error } = await supabase
       .from('requests')
       .insert([{
-        full_name: requestData.full_name,
-        phone: requestData.phone,
-        car_details: requestData.car_details,
-        message: requestData.message,
+        ...dataForDatabase,
         created_at: new Date().toISOString()
       }])
       .select()
@@ -312,7 +343,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Internal server error' 
+        error: error instanceof Error ? error.message : 'Internal server error' 
       },
       { status: 500 }
     )
