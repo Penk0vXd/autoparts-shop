@@ -1,0 +1,51 @@
+# 🚫 VERCEL DEPLOYMENT EXCLUSIONS
+# Optimized for MVP auto parts store - keeps ALL product features
+
+# 📝 Development Documentation
+*.md
+README*
+CHANGELOG*
+LICENSE*
+CONTRIBUTING*
+*_GUIDE.md
+*_FIXES.md
+
+# 🧪 Testing & Development Files
+**/__tests__/
+**/*.test.*
+**/*.spec.*
+jest.config.*
+jest.setup.*
+**/coverage/
+
+# 🎨 Demo Components & Examples  
+**/*Demo.tsx
+**/*Example.tsx
+**/*Playground.tsx
+
+# 🛠️ Development Scripts & Tools
+scripts/
+add-product.ts
+seed.ts
+.cursor/
+
+# 📦 Build & Dependencies
+node_modules/
+.next/
+out/
+coverage/
+
+# 🗂️ Development Assets
+.vscode/
+.idea/
+
+# 📊 Analysis Reports (from cleanup)
+unused-*.txt
+cleanup-report.md
+
+# ✅ CORE PRODUCT FEATURES INCLUDED:
+# ✅ src/app/ - All pages including products, brands, order, success
+# ✅ src/components/ - All essential UI components
+# ✅ src/services/ - productService, brandService, etc.
+# ✅ src/store/ - cartStore and other state management
+# ✅ Build Status: All 23 pages generate successfully

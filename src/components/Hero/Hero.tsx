@@ -254,7 +254,7 @@ export function Hero({ className = '' }: HeroProps) {
           <div className={`flex flex-col sm:flex-row gap-4 justify-center mb-16 transform transition-all duration-1000 delay-900 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
             {/* Primary CTA - Sacred Request Button */}
             <Link
-              href="/inquiry"
+              href="/request"
               className="group relative w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold px-12 py-6 text-xl rounded-full shadow-2xl transform transition-all duration-300 hover:scale-105 hover:shadow-red-500/50 focus:outline-none focus:ring-4 focus:ring-red-500/50 active:scale-95 overflow-hidden animate-glow inline-flex items-center justify-center"
               style={{
                 boxShadow: '0 20px 40px rgba(211, 47, 47, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset, 0 0 20px rgba(211, 47, 47, 0.5)'
