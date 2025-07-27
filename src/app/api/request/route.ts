@@ -3,9 +3,49 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { z } from 'zod'
 
-// High-performance Discord webhook API route
+// High-performance Discord webhook API route with Zod validation
 // Works flawlessly in both local and Vercel environments
+
+// Zod schema for API validation
+const apiRequestSchema = z.object({
+  full_name: z
+    .string()
+    .min(2, 'Името трябва да е поне 2 символа')
+    .max(100, 'Името трябва да е под 100 символа')
+    .regex(/^[a-zA-Zа-яА-Я\s]+$/, 'Името трябва да съдържа само букви'),
+  
+  phone: z
+    .string()
+    .min(6, 'Телефонният номер трябва да е поне 6 символа')
+    .max(20, 'Телефонният номер трябва да е под 20 символа')
+    .regex(/^[\+]?[0-9\s\-\(\)]+$/, 'Невалиден формат на телефонен номер'),
+  
+  car_details: z
+    .string()
+    .min(3, 'Детайлите за автомобила трябва да са поне 3 символа')
+    .max(200, 'Детайлите за автомобила трябва да са под 200 символа'),
+  
+  message: z
+    .string()
+    .min(10, 'Съобщението трябва да е поне 10 символа')
+    .max(1000, 'Съобщението трябва да е под 1000 символа'),
+  
+  file: z
+    .any()
+    .optional()
+    .refine((file) => {
+      if (!file) return true
+      const maxSize = 5 * 1024 * 1024 // 5MB
+      return file.size <= maxSize
+    }, 'Файлът трябва да е под 5MB')
+    .refine((file) => {
+      if (!file) return true
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf']
+      return allowedTypes.includes(file.type)
+    }, 'Разрешени са само JPG, PNG и PDF файлове')
+})
 
 // Type definitions for robust type safety
 interface RequestData {
@@ -13,6 +53,7 @@ interface RequestData {
   phone: string
   car_details: string
   message: string
+  file?: any
 }
 
 interface DiscordEmbed {
@@ -41,6 +82,10 @@ interface ApiResponse {
   id?: string
   discord_sent?: boolean
   error?: string
+  details?: Array<{
+    path: (string | number)[]
+    message: string
+  }>
 }
 
 // Initialize Supabase client with service role key
@@ -154,7 +199,7 @@ async function sendDiscordNotification(requestData: RequestData, requestId: stri
   }
 }
 
-// Main POST handler with comprehensive error handling
+// Main POST handler with comprehensive error handling and Zod validation
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
   console.log('[API] POST /api/request - Request received')
   
@@ -182,58 +227,37 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       full_name: body.full_name ? '***' : 'missing',
       phone: body.phone ? '***' : 'missing',
       car_details: body.car_details ? '***' : 'missing',
-      message: body.message ? '***' : 'missing'
+      message: body.message ? '***' : 'missing',
+      file: body.file ? 'present' : 'missing'
     })
     
-    // Comprehensive validation
-    if (!body.full_name || !body.phone || !body.car_details || !body.message) {
-      console.log('[API] Validation failed: missing required fields')
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'All fields are required: full_name, phone, car_details, message' 
-        },
-        { status: 400 }
-      )
+    // Server-side validation with Zod
+    try {
+      apiRequestSchema.parse(body)
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        console.log('[API] Validation failed:', validationError.errors)
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Validation failed',
+            details: validationError.errors.map(err => ({
+              path: err.path,
+              message: err.message
+            }))
+          },
+          { status: 400 }
+        )
+      }
     }
-
-    // Field length validation
-    if (body.full_name.length < 2 || body.full_name.length > 100) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Full name must be between 2 and 100 characters' 
-        },
-        { status: 400 }
-      )
-    }
-
-    if (body.phone.length < 6 || body.phone.length > 20) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Phone number must be between 6 and 20 characters' 
-        },
-        { status: 400 }
-      )
-    }
-
-    if (body.message.length < 10 || body.message.length > 1000) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Message must be between 10 and 1000 characters' 
-        },
-        { status: 400 }
-      )
-    }
-
+    
     // Prepare data for database
     const requestData: RequestData = {
       full_name: body.full_name.trim(),
       phone: body.phone.trim(),
       car_details: body.car_details.trim(),
-      message: body.message.trim()
+      message: body.message.trim(),
+      file: body.file
     }
 
     console.log('[API] Saving to Supabase...')
@@ -242,7 +266,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     const { data, error } = await supabase
       .from('requests')
       .insert([{
-        ...requestData,
+        full_name: requestData.full_name,
+        phone: requestData.phone,
+        car_details: requestData.car_details,
+        message: requestData.message,
         created_at: new Date().toISOString()
       }])
       .select()
