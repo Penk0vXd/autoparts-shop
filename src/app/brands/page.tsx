@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -385,9 +385,10 @@ function AdvancedFilters({
   )
 }
 
-export default function BrandsPage() {
-  const router = useRouter()
+// Separate component for search params logic
+function BrandsContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [allBrands, setAllBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -635,5 +636,13 @@ export default function BrandsPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function BrandsPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8"><div className="animate-pulse">Loading brands...</div></div>}>
+      <BrandsContent />
+    </Suspense>
   )
 } 

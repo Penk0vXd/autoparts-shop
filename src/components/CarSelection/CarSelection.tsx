@@ -33,6 +33,7 @@ type CarSelection = {
 type CarSelectionProps = {
   onSelectionChange?: (selection: CarSelection) => void
   className?: string
+  initialSelection?: CarSelection // Added missing prop
 }
 
 type CarSelectionLoadingState = {
@@ -135,7 +136,8 @@ export function CarSelection({
     make: 'Изберете марка',
     model: 'Изберете модел', 
     year: 'Изберете година'
-  }
+  },
+  initialSelection = {} // Added missing prop with default value
 }: CarSelectionProps) {
   // State for current selection
   const [selection, setSelection] = useState<CarSelection>(initialSelection)

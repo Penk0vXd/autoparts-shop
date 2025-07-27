@@ -1,16 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Check, Phone, Truck, Clock, ArrowRight, Home, FileText, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 
-/**
- * Order Confirmation Page - Success page with clear next steps
- * MVP implementation with emotional satisfaction and expectation setting
- */
-export default function SuccessPage() {
+// Separate component for search params logic
+function SuccessContent() {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order')
   const [currentTime, setCurrentTime] = useState<string>('')
@@ -262,5 +259,17 @@ export default function SuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Order Confirmation Page - Success page with clear next steps
+ * MVP implementation with emotional satisfaction and expectation setting
+ */
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8"><div className="animate-pulse">Loading success page...</div></div>}>
+      <SuccessContent />
+    </Suspense>
   )
 } 

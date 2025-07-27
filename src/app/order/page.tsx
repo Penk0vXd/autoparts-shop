@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Check, Truck, ShieldCheck, Phone, AlertCircle, MapPin, User, FileText } from 'lucide-react'
@@ -31,11 +31,8 @@ interface OrderFormData {
   customerNotes: string
 }
 
-/**
- * Order Form Page - Frictionless single-step checkout
- * MVP implementation optimized for Bulgarian buying behavior
- */
-export default function OrderPage() {
+// Separate component for search params logic
+function OrderContent() {
   const searchParams = useSearchParams()
   const productSlug = searchParams.get('product')
   const [product, setProduct] = useState<any>(null)
@@ -398,5 +395,17 @@ export default function OrderPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Order Form Page - Frictionless single-step checkout
+ * MVP implementation optimized for Bulgarian buying behavior
+ */
+export default function OrderPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8"><div className="animate-pulse">Loading order form...</div></div>}>
+      <OrderContent />
+    </Suspense>
   )
 } 

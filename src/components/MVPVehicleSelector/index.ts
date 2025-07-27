@@ -4,8 +4,8 @@
  * Export barrel for the MVP Vehicle Selector component and related utilities.
  */
 
-export { default as MVPVehicleSelector } from './MVPVehicleSelector'
-export { MVPVehicleSelector as default } from './MVPVehicleSelector'
+// Import and re-export the component properly
+export { MVPVehicleSelector, MVPVehicleSelector as default } from './MVPVehicleSelector'
 
 // Re-export types for convenience
 export type {

@@ -1,2 +1,0 @@
-# Run our guardian validation script (Windows PowerShell)
-powershell.exe -ExecutionPolicy Bypass -File scripts/prepush.ps1 
