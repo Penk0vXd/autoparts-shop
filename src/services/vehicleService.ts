@@ -37,7 +37,7 @@ const mockMakes: VehicleMake[] = [
     id: '4',
     name: 'Volkswagen',
     slug: 'volkswagen',
-    logo_url: null,
+    logo_url: undefined,
     country: 'Germany',
     is_active: true
   },
@@ -53,7 +53,7 @@ const mockMakes: VehicleMake[] = [
     id: '6',
     name: 'Ford',
     slug: 'ford',
-    logo_url: null,
+    logo_url: undefined,
     country: 'USA',
     is_active: true
   },
@@ -77,7 +77,7 @@ const mockMakes: VehicleMake[] = [
     id: '9',
     name: 'Citroën',
     slug: 'citroen',
-    logo_url: '/logos/citroen.png',
+    logo_url: undefined,
     country: 'France',
     is_active: true
   },
@@ -85,7 +85,7 @@ const mockMakes: VehicleMake[] = [
     id: '10',
     name: 'Skoda',
     slug: 'skoda',
-    logo_url: null,
+    logo_url: undefined,
     country: 'Czech Republic',
     is_active: true
   },
@@ -93,7 +93,7 @@ const mockMakes: VehicleMake[] = [
     id: '11',
     name: 'Fiat',
     slug: 'fiat',
-    logo_url: '/logos/fiat.png',
+    logo_url: undefined,
     country: 'Italy',
     is_active: true
   },
@@ -101,7 +101,7 @@ const mockMakes: VehicleMake[] = [
     id: '12',
     name: 'Toyota',
     slug: 'toyota',
-    logo_url: null,
+    logo_url: undefined,
     country: 'Japan',
     is_active: true
   },
@@ -109,7 +109,7 @@ const mockMakes: VehicleMake[] = [
     id: '13',
     name: 'Honda',
     slug: 'honda',
-    logo_url: null,
+    logo_url: undefined,
     country: 'Japan',
     is_active: true
   },

@@ -832,24 +832,26 @@ export function useCascadingVehicle(options: UseCascadingVehicleOptions = {}): C
     loadMakes()
   }, [loadMakes])
 
-  // Handle cascading on selection changes
+  // Load models when make is selected
   useEffect(() => {
-    if (selection.make && !models.length && !loading.model) {
+    if (selection.make && !models.length && !loading.models) {
       loadModels(selection.make.id)
     }
-  }, [selection.make, models.length, loading.model, loadModels])
+  }, [selection.make, models.length, loading.models, loadModels])
 
+  // Load years when model is selected
   useEffect(() => {
-    if (selection.model && !years.length && !loading.year) {
+    if (selection.model && !years.length && !loading.years) {
       loadYears(selection.model.id)
     }
-  }, [selection.model, years.length, loading.year, loadYears])
+  }, [selection.model, years.length, loading.years, loadYears])
 
+  // Load engines when model and year are selected
   useEffect(() => {
-    if (selection.model && selection.year && !engines.length && !loading.engine) {
+    if (selection.model && selection.year && !engines.length && !loading.engines) {
       loadEngines(selection.model.id, selection.year)
     }
-  }, [selection.model, selection.year, engines.length, loading.engine, loadEngines])
+  }, [selection.model, selection.year, engines.length, loading.engines, loadEngines])
 
   // Notify parent of selection changes
   useEffect(() => {

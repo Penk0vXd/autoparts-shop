@@ -28,10 +28,22 @@ export type Brand = {
   id: string;
   name: string;
   slug: string;
-  logo_url?: string;
-  description?: string;
+  logo_url?: string | null;
+  description?: string | null;
+  website_url?: string;
   category: 'car' | 'accessory' | 'parts';
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductImage = {
+  id: string;
+  product_id: string;
+  url: string;
+  alt?: string | null;
+  placeholder?: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 };
@@ -41,29 +53,83 @@ export type Product = {
   sku: string;
   name: string;
   slug: string;
-  description?: string;
-  short_description?: string;
-  category_id?: string;
-  brand_id?: string;
+  description?: string | null;
+  short_description?: string | null;
+  category_id?: string | null;
+  brand_id?: string | null;
   price: number;
-  compare_price?: number;
-  cost_price?: number;
-  stock: number;
-  min_stock_level: number;
-  weight?: number;
-  dimensions?: Record<string, unknown>;
-  images?: string[];
-  specifications?: Record<string, unknown>;
-  compatibility?: Record<string, unknown>;
+  compare_price?: number | null;
+  cost_price?: number | null;
+  stock_quantity: number;
   is_active: boolean;
   is_featured: boolean;
-  meta_title?: string;
-  meta_description?: string;
+  is_new: boolean;
+  is_on_sale: boolean;
+  original_price?: number | null;
+  discount_percent?: number | null;
+  part_number?: string | null;
+  weight?: number | null;
+  dimensions?: string | null;
+  warranty_months?: number | null;
+  tags?: string[] | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
   created_at: string;
   updated_at: string;
-  // Relations
-  category?: Category;
-  brand?: Brand;
+};
+
+// Product with related data for API responses
+export type ProductWithRelations = {
+  id: string;
+  sku: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  short_description?: string | null;
+  category_id?: string | null;
+  brand_id?: string | null;
+  price: number;
+  compare_price?: number | null;
+  cost_price?: number | null;
+  stock_quantity: number;
+  is_active: boolean;
+  is_featured: boolean;
+  is_new: boolean;
+  is_on_sale: boolean;
+  original_price?: number | null;
+  discount_percent?: number | null;
+  part_number?: string | null;
+  weight?: number | null;
+  dimensions?: string | null;
+  warranty_months?: number | null;
+  tags?: string[] | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  created_at: string;
+  updated_at: string;
+  brand: {
+    id: string;
+    name: string;
+    slug: string;
+    logo_url: string | null;
+    description: string | null;
+    category: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string | null;
+    parent_id?: string | null;
+    image_url?: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  images?: ProductImage[];
 };
 
 export type Order = {
