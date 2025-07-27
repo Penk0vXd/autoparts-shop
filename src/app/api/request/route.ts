@@ -254,6 +254,29 @@ async function extractRequestData(request: NextRequest): Promise<RequestData> {
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
   console.log('[API] POST /api/request - Request received')
   
+  // Check for required environment variables
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.error('[API] Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Server configuration error: Supabase URL not configured' 
+      },
+      { status: 500 }
+    )
+  }
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[API] Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Server configuration error: Supabase service role key not configured' 
+      },
+      { status: 500 }
+    )
+  }
+  
   try {
     // Extract data from request (FormData or JSON)
     const requestData = await extractRequestData(request)
