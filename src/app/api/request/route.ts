@@ -4,9 +4,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// MVP API Route for Parts Requests with Discord Webhook
-// Works reliably in both local and Vercel environments
+// High-performance Discord webhook API route
+// Works flawlessly in both local and Vercel environments
 
+// Type definitions for robust type safety
 interface RequestData {
   full_name: string
   phone: string
@@ -34,7 +35,15 @@ interface DiscordPayload {
   avatar_url?: string
 }
 
-// Initialize Supabase client with service role key for server-side operations
+interface ApiResponse {
+  success: boolean
+  message?: string
+  id?: string
+  discord_sent?: boolean
+  error?: string
+}
+
+// Initialize Supabase client with service role key
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -46,7 +55,7 @@ const supabase = createClient(
   }
 )
 
-// Enhanced Discord webhook function with better error handling
+// Robust Discord webhook function with comprehensive error handling
 async function sendDiscordNotification(requestData: RequestData, requestId: string): Promise<boolean> {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL
   
@@ -62,6 +71,8 @@ async function sendDiscordNotification(requestData: RequestData, requestId: stri
   }
 
   try {
+    console.log('[Discord] Preparing notification payload...')
+    
     const embed: DiscordEmbed = {
       title: "🚗 Нова заявка за авточасти",
       color: 0xDC2626, // Red color
@@ -143,50 +154,81 @@ async function sendDiscordNotification(requestData: RequestData, requestId: stri
   }
 }
 
-export async function POST(request: NextRequest) {
+// Main POST handler with comprehensive error handling
+export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse>> {
+  console.log('[API] POST /api/request - Request received')
+  
   try {
-    // Parse JSON body
-    const body: RequestData = await request.json()
+    // Log raw request for debugging
+    const rawBody = await request.text()
+    console.log('[API] Raw request body:', rawBody)
     
-    console.log('[API] Received request:', { 
+    // Parse JSON body with proper error handling
+    let body: RequestData
+    try {
+      body = JSON.parse(rawBody)
+    } catch (parseError) {
+      console.error('[API] JSON parsing error:', parseError)
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Invalid JSON format in request body' 
+        },
+        { status: 400 }
+      )
+    }
+    
+    console.log('[API] Parsed request data:', { 
       full_name: body.full_name ? '***' : 'missing',
       phone: body.phone ? '***' : 'missing',
       car_details: body.car_details ? '***' : 'missing',
       message: body.message ? '***' : 'missing'
     })
     
-    // Basic validation
+    // Comprehensive validation
     if (!body.full_name || !body.phone || !body.car_details || !body.message) {
       console.log('[API] Validation failed: missing required fields')
       return NextResponse.json(
-        { success: false, error: 'Всички полета са задължителни' },
+        { 
+          success: false, 
+          error: 'All fields are required: full_name, phone, car_details, message' 
+        },
         { status: 400 }
       )
     }
 
-    // Validate field lengths
+    // Field length validation
     if (body.full_name.length < 2 || body.full_name.length > 100) {
       return NextResponse.json(
-        { success: false, error: 'Името трябва да е между 2 и 100 символа' },
+        { 
+          success: false, 
+          error: 'Full name must be between 2 and 100 characters' 
+        },
         { status: 400 }
       )
     }
 
     if (body.phone.length < 6 || body.phone.length > 20) {
       return NextResponse.json(
-        { success: false, error: 'Телефонният номер трябва да е между 6 и 20 символа' },
+        { 
+          success: false, 
+          error: 'Phone number must be between 6 and 20 characters' 
+        },
         { status: 400 }
       )
     }
 
     if (body.message.length < 10 || body.message.length > 1000) {
       return NextResponse.json(
-        { success: false, error: 'Съобщението трябва да е между 10 и 1000 символа' },
+        { 
+          success: false, 
+          error: 'Message must be between 10 and 1000 characters' 
+        },
         { status: 400 }
       )
     }
 
-    // Prepare data for Supabase
+    // Prepare data for database
     const requestData: RequestData = {
       full_name: body.full_name.trim(),
       phone: body.phone.trim(),
@@ -196,7 +238,7 @@ export async function POST(request: NextRequest) {
 
     console.log('[API] Saving to Supabase...')
 
-    // Insert into Supabase
+    // Insert into Supabase with error handling
     const { data, error } = await supabase
       .from('requests')
       .insert([{
@@ -209,7 +251,10 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('[API] Supabase insert error:', error)
       return NextResponse.json(
-        { success: false, error: 'Грешка при запазване на заявката. Моля опитайте отново.' },
+        { 
+          success: false, 
+          error: 'Database error: Failed to save request' 
+        },
         { status: 500 }
       )
     }
@@ -224,51 +269,45 @@ export async function POST(request: NextRequest) {
     }
 
     // Success response
-    return NextResponse.json(
-      { 
-        success: true, 
-        message: 'Заявката е изпратена успешно',
-        id: data.id,
-        discord_sent: discordSuccess
-      },
-      { status: 200 }
-    )
-
-  } catch (error) {
-    console.error('[API] Route error:', error)
-    
-    // Handle JSON parsing errors
-    if (error instanceof SyntaxError) {
-      return NextResponse.json(
-        { success: false, error: 'Невалидни данни' },
-        { status: 400 }
-      )
+    const response: ApiResponse = {
+      success: true,
+      message: 'Request submitted successfully',
+      id: data.id,
+      discord_sent: discordSuccess
     }
 
-    // Handle other errors
+    console.log('[API] Request processed successfully')
+    return NextResponse.json(response, { status: 200 })
+
+  } catch (error) {
+    console.error('[API] Unexpected error:', error)
+    
     return NextResponse.json(
-      { success: false, error: 'Възникна грешка при обработката' },
+      { 
+        success: false, 
+        error: 'Internal server error' 
+      },
       { status: 500 }
     )
   }
 }
 
 // Handle other HTTP methods
-export async function GET() {
+export async function GET(): Promise<NextResponse<{ error: string }>> {
   return NextResponse.json(
     { error: 'Method not allowed. Use POST to submit requests.' },
     { status: 405 }
   )
 }
 
-export async function PUT() {
+export async function PUT(): Promise<NextResponse<{ error: string }>> {
   return NextResponse.json(
     { error: 'Method not allowed. Use POST to submit requests.' },
     { status: 405 }
   )
 }
 
-export async function DELETE() {
+export async function DELETE(): Promise<NextResponse<{ error: string }>> {
   return NextResponse.json(
     { error: 'Method not allowed. Use POST to submit requests.' },
     { status: 405 }

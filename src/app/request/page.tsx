@@ -27,8 +27,11 @@ export default function RequestPage() {
     try {
       const response = await fetch('/api/request', {
         method: 'POST',
-        body: formData
-      })
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       const result = await response.json()
 
