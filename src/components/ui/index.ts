@@ -39,11 +39,3 @@ export {
   SimpleErrorFallback, 
   ProductErrorFallback 
 } from './ErrorBoundary'
-
-// MVP Vehicle Selector
-export { MVPVehicleSelector } from '../MVPVehicleSelector';
-export type { 
-  MVPVehicleSelectorProps, 
-  MVPVehicleSelection, 
-  MVPVehicleSelectorRef 
-} from '../../types/mvp-vehicle-selector'; 
