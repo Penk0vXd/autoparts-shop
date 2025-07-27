@@ -4,8 +4,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// MVP API Route for Parts Requests
-// Simplified version that takes form data and saves to Supabase
+// MVP API Route for Parts Requests with Discord Webhook
+// Works in both local and Vercel environments
 
 interface RequestData {
   full_name: string
@@ -26,6 +26,89 @@ const supabase = createClient(
   }
 )
 
+// Discord webhook function that works in both local and Vercel
+async function sendDiscordNotification(requestData: any, requestId: string) {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL
+  
+  if (!webhookUrl) {
+    console.log('Discord webhook URL not configured, skipping notification')
+    return
+  }
+
+  try {
+    const embed = {
+      title: "🚗 Нова заявка за авточасти",
+      color: 0xDC2626, // Red color
+      fields: [
+        { 
+          name: "👤 Клиент", 
+          value: requestData.full_name, 
+          inline: true 
+        },
+        { 
+          name: "📞 Телефон", 
+          value: requestData.phone, 
+          inline: true 
+        },
+        { 
+          name: "🚙 Автомобил", 
+          value: requestData.car_details || "Не е посочен", 
+          inline: false 
+        },
+        { 
+          name: "🔧 Описание на частта", 
+          value: requestData.message, 
+          inline: false 
+        },
+        { 
+          name: "🆔 ID на заявката", 
+          value: requestId, 
+          inline: true 
+        },
+        {
+          name: "📅 Дата и час",
+          value: new Date().toLocaleString('bg-BG', {
+            timeZone: 'Europe/Sofia',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          inline: true
+        }
+      ],
+      timestamp: new Date().toISOString(),
+      footer: { 
+        text: "AutoParts Store - Автоматично известие" 
+      }
+    }
+
+    const payload = {
+      embeds: [embed],
+      username: "AutoParts Bot",
+      avatar_url: "https://cdn.discordapp.com/attachments/123456789/123456789/car-icon.png"
+    }
+
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    })
+
+    if (!response.ok) {
+      console.error('Discord webhook failed:', response.status, await response.text())
+    } else {
+      console.log('Discord notification sent successfully')
+    }
+  } catch (error) {
+    console.error('Discord webhook error:', error)
+    // Don't fail the request if Discord webhook fails
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Parse JSON body
@@ -34,7 +117,7 @@ export async function POST(request: NextRequest) {
     // Basic validation
     if (!body.full_name || !body.phone || !body.car_details || !body.message) {
       return NextResponse.json(
-        { success: false, error: 'All fields are required' },
+        { success: false, error: 'Всички полета са задължителни' },
         { status: 400 }
       )
     }
@@ -42,21 +125,21 @@ export async function POST(request: NextRequest) {
     // Validate field lengths
     if (body.full_name.length < 2 || body.full_name.length > 100) {
       return NextResponse.json(
-        { success: false, error: 'Full name must be between 2 and 100 characters' },
+        { success: false, error: 'Името трябва да е между 2 и 100 символа' },
         { status: 400 }
       )
     }
 
     if (body.phone.length < 6 || body.phone.length > 20) {
       return NextResponse.json(
-        { success: false, error: 'Phone number must be between 6 and 20 characters' },
+        { success: false, error: 'Телефонният номер трябва да е между 6 и 20 символа' },
         { status: 400 }
       )
     }
 
     if (body.message.length < 10 || body.message.length > 1000) {
       return NextResponse.json(
-        { success: false, error: 'Message must be between 10 and 1000 characters' },
+        { success: false, error: 'Съобщението трябва да е между 10 и 1000 символа' },
         { status: 400 }
       )
     }
@@ -80,16 +163,19 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Supabase insert error:', error)
       return NextResponse.json(
-        { success: false, error: 'Failed to save request. Please try again.' },
+        { success: false, error: 'Грешка при запазване на заявката. Моля опитайте отново.' },
         { status: 500 }
       )
     }
+
+    // Send Discord notification (works in both local and Vercel)
+    await sendDiscordNotification(requestData, data.id)
 
     // Success response
     return NextResponse.json(
       { 
         success: true, 
-        message: 'Request submitted successfully',
+        message: 'Заявката е изпратена успешно',
         id: data.id 
       },
       { status: 200 }
@@ -101,14 +187,14 @@ export async function POST(request: NextRequest) {
     // Handle JSON parsing errors
     if (error instanceof SyntaxError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid JSON data' },
+        { success: false, error: 'Невалидни данни' },
         { status: 400 }
       )
     }
 
     // Handle other errors
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: 'Възникна грешка при обработката' },
       { status: 500 }
     )
   }
