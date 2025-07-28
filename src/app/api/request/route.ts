@@ -8,6 +8,18 @@ import { z } from 'zod'
 // High-performance Discord webhook API route with Zod validation
 // Works flawlessly in both local and Vercel environments
 
+// Initialize Supabase with service role (bypass RLS)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
+
 // Zod schema for API validation
 const apiRequestSchema = z.object({
   full_name: z
@@ -92,19 +104,49 @@ interface ApiResponse {
   }>
 }
 
-// Initialize Supabase client with service role key
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+// Upload file to Supabase storage and return public URL
+async function uploadFileToStorage(file: File, requestId: string): Promise<string | null> {
+  try {
+    console.log('[Storage] Uploading file:', file.name, file.size, 'bytes')
+    
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${requestId}-${Date.now()}.${fileExt}`
+    const filePath = `request-attachments/${fileName}`
+    
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    
+    // Upload to Supabase storage
+    const { data, error } = await supabase.storage
+      .from('uploads')
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        cacheControl: '3600',
+        upsert: false
+      })
+    
+    if (error) {
+      console.error('[Storage] Upload error:', error)
+      return null
     }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('uploads')
+      .getPublicUrl(filePath)
+    
+    console.log('[Storage] File uploaded successfully:', urlData.publicUrl)
+    return urlData.publicUrl
+    
+  } catch (error) {
+    console.error('[Storage] Upload failed:', error)
+    return null
   }
-)
+}
 
-// Robust Discord webhook function with comprehensive error handling
+// Send Discord notification with image
 async function sendDiscordNotification(requestData: RequestData, requestId: string): Promise<boolean> {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL
 
@@ -120,39 +162,46 @@ async function sendDiscordNotification(requestData: RequestData, requestId: stri
   }
 
   try {
-    // Prepare Discord embed
+    // Upload file to storage if present
+    let imageUrl: string | null = null
+    if (requestData.file && requestData.file instanceof File) {
+      console.log('[Discord] Uploading file for Discord embed...')
+      imageUrl = await uploadFileToStorage(requestData.file, requestId)
+    }
+
+    // Prepare Discord embed with proper validation
     const embed: DiscordEmbed = {
       title: '🚗 Нова заявка за авточасти',
       color: 0x00FF00, // Green color
       fields: [
         {
           name: '👤 Име',
-          value: requestData.full_name || 'Не е посочено',
+          value: (requestData.full_name || 'Не е посочено').substring(0, 1024),
           inline: true
         },
         {
           name: '📞 Телефон',
-          value: requestData.phone || 'Не е посочено',
+          value: (requestData.phone || 'Не е посочено').substring(0, 1024),
           inline: true
         },
         {
           name: '🚗 Автомобил',
-          value: requestData.car_details || 'Не е посочено',
+          value: (requestData.car_details || 'Не е посочено').substring(0, 1024),
           inline: false
         },
         {
           name: '🔧 Търсена част',
-          value: requestData.message ? requestData.message.substring(0, 1000) : 'Не е посочено',
+          value: (requestData.message ? requestData.message.substring(0, 1000) : 'Не е посочено').substring(0, 1024),
           inline: false
         },
         {
           name: '🆔 ID на заявката',
-          value: requestId,
+          value: requestId.substring(0, 1024),
           inline: true
         },
         {
           name: '⏰ Време',
-          value: new Date().toLocaleString('bg-BG'),
+          value: new Date().toLocaleString('bg-BG').substring(0, 1024),
           inline: true
         }
       ],
@@ -162,32 +211,24 @@ async function sendDiscordNotification(requestData: RequestData, requestId: stri
       }
     }
 
-    // Add image if file is present
-    if (requestData.file && requestData.file instanceof File) {
-      try {
-        // Convert file to base64 for Discord
-        const arrayBuffer = await requestData.file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-        const base64 = buffer.toString('base64')
-        const mimeType = requestData.file.type
-        
-        embed.image = {
-          url: `data:${mimeType};base64,${base64}`
-        }
-        
-        embed.fields.push({
-          name: '📎 Прикачен файл',
-          value: `${requestData.file.name} (${(requestData.file.size / 1024).toFixed(1)} KB)`,
-          inline: true
-        })
-      } catch (imageError) {
-        console.error('[Discord] Error processing image:', imageError)
-        embed.fields.push({
-          name: '📎 Прикачен файл',
-          value: 'Грешка при обработка на файла',
-          inline: true
-        })
+    // Add image if file was uploaded successfully
+    if (imageUrl) {
+      embed.image = {
+        url: imageUrl
       }
+      
+      embed.fields.push({
+        name: '📎 Прикачен файл',
+        value: `${requestData.file.name} (${(requestData.file.size / 1024).toFixed(1)} KB)`,
+        inline: true
+      })
+    } else if (requestData.file && requestData.file instanceof File) {
+      // File upload failed, just show filename
+      embed.fields.push({
+        name: '📎 Прикачен файл',
+        value: `${requestData.file.name} (${(requestData.file.size / 1024).toFixed(1)} KB) - Грешка при качване`,
+        inline: true
+      })
     }
 
     const payload: DiscordPayload = {
@@ -196,6 +237,7 @@ async function sendDiscordNotification(requestData: RequestData, requestId: stri
     }
 
     console.log('[Discord] Sending notification...')
+    console.log('[Discord] Payload:', JSON.stringify(payload, null, 2))
 
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -212,7 +254,43 @@ async function sendDiscordNotification(requestData: RequestData, requestId: stri
     } else {
       const errorText = await response.text()
       console.error('[Discord] Webhook failed:', response.status, errorText)
-      return false
+      console.error('[Discord] Response headers:', Object.fromEntries(response.headers.entries()))
+      
+      // Try fallback with simpler embed
+      try {
+        console.log('[Discord] Trying fallback with simpler embed...')
+        const fallbackPayload = {
+          embeds: [{
+            title: '🚗 Нова заявка за авточасти',
+            description: `**Име:** ${requestData.full_name || 'Не е посочено'}\n**Телефон:** ${requestData.phone || 'Не е посочено'}\n**ID:** ${requestId}`,
+            color: 0x00FF00,
+            timestamp: new Date().toISOString(),
+            ...(imageUrl && { image: { url: imageUrl } })
+          }],
+          username: 'AutoParts Bot'
+        }
+        
+        const fallbackResponse = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'AutoParts-Store/1.0'
+          },
+          body: JSON.stringify(fallbackPayload)
+        })
+        
+        if (fallbackResponse.ok) {
+          console.log('[Discord] Fallback notification sent successfully')
+          return true
+        } else {
+          const fallbackError = await fallbackResponse.text()
+          console.error('[Discord] Fallback also failed:', fallbackResponse.status, fallbackError)
+          return false
+        }
+      } catch (fallbackError) {
+        console.error('[Discord] Fallback error:', fallbackError)
+        return false
+      }
     }
 
   } catch (error) {

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-
 export default function RequestPage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -16,9 +15,10 @@ export default function RequestPage() {
     setIsSubmitting(true)
     setErrors({})
 
+    // Create FormData from the form element
     const formData = new FormData(e.currentTarget)
 
-    // Add file if selected
+    // Add file if selected (use the correct field name 'attachment')
     if (selectedFile) {
       formData.append('attachment', selectedFile)
     }
@@ -26,6 +26,7 @@ export default function RequestPage() {
     try {
       const response = await fetch('/api/request', {
         method: 'POST',
+        // Don't set Content-Type manually - let the browser set it with boundary
         body: formData
       })
 
@@ -44,12 +45,10 @@ export default function RequestPage() {
         } else {
           setErrors({ general: result.error || 'Възникна грешка' })
         }
-      
       }
     } catch (error) {
       console.error('Submission error:', error)
       setErrors({ general: 'Грешка в мрежата. Моля опитайте отново.' })
-      	
     } finally {
       setIsSubmitting(false)
     }
@@ -66,17 +65,21 @@ export default function RequestPage() {
       if (file.size > maxSize) {
         setErrors({ file: 'Файлът трябва да е под 5MB' })
         e.target.value = '' // Clear input
+        setSelectedFile(null)
         return
       }
       
       if (!allowedTypes.includes(file.type)) {
         setErrors({ file: 'Разрешени са само JPG, PNG и PDF файлове' })
         e.target.value = '' // Clear input
+        setSelectedFile(null)
         return
       }
       
       setSelectedFile(file)
       setErrors({ ...errors, file: '' })
+    } else {
+      setSelectedFile(null)
     }
   }
 
@@ -97,7 +100,7 @@ export default function RequestPage() {
       {/* 📝 Form Section */}
       <div className="max-w-2xl mx-auto px-4 pb-20">
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} encType="multipart/form-data" className="space-y-8">
             
             {/* 🍯 Honeypot (hidden anti-spam field) */}
             <input
@@ -300,7 +303,7 @@ export default function RequestPage() {
                       </span>
                       <input
                         id="file-upload"
-                        name="file-upload"
+                        name="attachment"
                         type="file"
                         className="sr-only"
                         accept=".jpg,.jpeg,.png,.pdf"
