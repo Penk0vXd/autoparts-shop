@@ -23,7 +23,15 @@ export const requestFormSchema = z.object({
     .string()
     .min(10, 'Съобщението трябва да е поне 10 символа')
     .max(1000, 'Съобщението трябва да е под 1000 символа'),
-  
+
+  vin: z
+    .string()
+    .optional()
+    .refine((vin) => {
+      if (!vin) return true // Optional field
+      return /^[A-HJ-NPR-Z0-9]{17}$/.test(vin.toUpperCase())
+    }, 'VIN номерът трябва да е 17 символа и да съдържа само букви и цифри'),
+
   file: z
     .any()
     .optional()

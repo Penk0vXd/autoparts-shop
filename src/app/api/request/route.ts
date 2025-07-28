@@ -31,7 +31,15 @@ const apiRequestSchema = z.object({
     .string()
     .min(10, 'Съобщението трябва да е поне 10 символа')
     .max(1000, 'Съобщението трябва да е под 1000 символа'),
-  
+
+  vin: z
+    .string()
+    .optional()
+    .refine((vin) => {
+      if (!vin) return true // Optional field
+      return /^[A-HJ-NPR-Z0-9]{17}$/.test(vin.toUpperCase())
+    }, 'VIN номерът трябва да е 17 символа и да съдържа само букви и цифри'),
+
   file: z
     .any()
     .optional()
@@ -53,6 +61,7 @@ interface RequestData {
   phone: string
   car_details: string
   message: string
+  vin?: string
   file?: any
 }
 
@@ -67,6 +76,9 @@ interface DiscordEmbed {
   timestamp: string
   footer: {
     text: string
+  }
+  image?: {
+    url: string
   }
 }
 
@@ -103,95 +115,113 @@ const supabase = createClient(
 // Robust Discord webhook function with comprehensive error handling
 async function sendDiscordNotification(requestData: RequestData, requestId: string): Promise<boolean> {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL
-  
+
   if (!webhookUrl) {
-    console.log('[Discord] Webhook URL not configured, skipping notification')
+    console.log('[Discord] Webhook URL not configured')
     return false
   }
 
   // Validate webhook URL format
-  if (!webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
-    console.error('[Discord] Invalid webhook URL format')
+  if (!webhookUrl.includes('discord.com/api/webhooks/')) {
+    console.log('[Discord] Invalid webhook URL format')
     return false
   }
 
   try {
-    console.log('[Discord] Preparing notification payload...')
-    
+    // Prepare Discord embed
     const embed: DiscordEmbed = {
-      title: "🚗 Нова заявка за авточасти",
-      color: 0xDC2626, // Red color
+      title: '🚗 Нова заявка за авточасти',
+      color: 0x00FF00, // Green color
       fields: [
-        { 
-          name: "👤 Клиент", 
-          value: requestData.full_name, 
-          inline: true 
-        },
-        { 
-          name: "📞 Телефон", 
-          value: requestData.phone, 
-          inline: true 
-        },
-        { 
-          name: "🚙 Автомобил", 
-          value: requestData.car_details || "Не е посочен", 
-          inline: false 
-        },
-        { 
-          name: "🔧 Описание на частта", 
-          value: requestData.message.length > 1024 
-            ? requestData.message.substring(0, 1021) + '...' 
-            : requestData.message, 
-          inline: false 
-        },
-        { 
-          name: "🆔 ID на заявката", 
-          value: requestId, 
-          inline: true 
+        {
+          name: '👤 Име',
+          value: requestData.full_name || 'Не е посочено',
+          inline: true
         },
         {
-          name: "📅 Дата и час",
-          value: new Date().toLocaleString('bg-BG', {
-            timeZone: 'Europe/Sofia',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          }),
+          name: '📞 Телефон',
+          value: requestData.phone || 'Не е посочено',
+          inline: true
+        },
+        {
+          name: '🚗 Автомобил',
+          value: requestData.car_details || 'Не е посочено',
+          inline: false
+        },
+        {
+          name: '🔧 Търсена част',
+          value: requestData.message ? requestData.message.substring(0, 1000) : 'Не е посочено',
+          inline: false
+        },
+        {
+          name: '🆔 ID на заявката',
+          value: requestId,
+          inline: true
+        },
+        {
+          name: '⏰ Време',
+          value: new Date().toLocaleString('bg-BG'),
           inline: true
         }
       ],
       timestamp: new Date().toISOString(),
-      footer: { 
-        text: "AutoParts Store - Автоматично известие" 
+      footer: {
+        text: 'AutoParts Store - Нова заявка'
+      }
+    }
+
+    // Add image if file is present
+    if (requestData.file && requestData.file instanceof File) {
+      try {
+        // Convert file to base64 for Discord
+        const arrayBuffer = await requestData.file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const base64 = buffer.toString('base64')
+        const mimeType = requestData.file.type
+        
+        embed.image = {
+          url: `data:${mimeType};base64,${base64}`
+        }
+        
+        embed.fields.push({
+          name: '📎 Прикачен файл',
+          value: `${requestData.file.name} (${(requestData.file.size / 1024).toFixed(1)} KB)`,
+          inline: true
+        })
+      } catch (imageError) {
+        console.error('[Discord] Error processing image:', imageError)
+        embed.fields.push({
+          name: '📎 Прикачен файл',
+          value: 'Грешка при обработка на файла',
+          inline: true
+        })
       }
     }
 
     const payload: DiscordPayload = {
       embeds: [embed],
-      username: "AutoParts Bot"
+      username: 'AutoParts Bot'
     }
 
-    console.log('[Discord] Sending notification to webhook...')
+    console.log('[Discord] Sending notification...')
 
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'AutoParts-Store-Bot/1.0'
+        'User-Agent': 'AutoParts-Store/1.0'
       },
       body: JSON.stringify(payload)
     })
 
-    if (!response.ok) {
+    if (response.ok) {
+      console.log('[Discord] Notification sent successfully')
+      return true
+    } else {
       const errorText = await response.text()
-      console.error(`[Discord] Webhook failed with status ${response.status}:`, errorText)
+      console.error('[Discord] Webhook failed:', response.status, errorText)
       return false
     }
-
-    console.log('[Discord] Notification sent successfully')
-    return true
 
   } catch (error) {
     console.error('[Discord] Webhook error:', error)
@@ -216,17 +246,20 @@ async function extractRequestData(request: NextRequest): Promise<RequestData> {
     const model = formData.get('model') as string || ''
     const year = formData.get('year') as string || ''
     const engine = formData.get('engine') as string || ''
-    
+    const vin = formData.get('vin') as string || ''
+
     const car_details = [brand, model, year, engine].filter(Boolean).join(' ')
-    
+    const car_details_with_vin = vin ? `${car_details} (VIN: ${vin})` : car_details
+
     const message = formData.get('part_text') as string || ''
     const file = formData.get('attachment') || null
     
     return {
       full_name,
       phone,
-      car_details,
+      car_details: car_details_with_vin,
       message,
+      vin,
       file
     }
   } else {
@@ -241,6 +274,7 @@ async function extractRequestData(request: NextRequest): Promise<RequestData> {
         phone: body.phone || '',
         car_details: body.car_details || '',
         message: body.message || body.part_text || '',
+        vin: body.vin || '',
         file: body.file || null
       }
     } catch (parseError) {

@@ -230,6 +230,22 @@ export default function RequestPage() {
                     placeholder="2.0 TDI, 1.8 TSI..."
                   />
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    VIN номер (по желание)
+                  </label>
+                  <input
+                    type="text"
+                    name="vin"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="WBA3B5C50FD123456"
+                    maxLength={17}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    VIN номерът помага за по-точно определяне на частите
+                  </p>
+                </div>
               </div>
             </div>
 
