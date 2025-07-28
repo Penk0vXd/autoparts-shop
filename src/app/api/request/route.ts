@@ -32,14 +32,6 @@ const apiRequestSchema = z.object({
     .min(10, 'Съобщението трябва да е поне 10 символа')
     .max(1000, 'Съобщението трябва да е под 1000 символа'),
 
-  vin: z
-    .string()
-    .optional()
-    .refine((vin) => {
-      if (!vin) return true // Optional field
-      return /^[A-HJ-NPR-Z0-9]{17}$/.test(vin.toUpperCase())
-    }, 'VIN номерът трябва да е 17 символа и да съдържа само букви и цифри'),
-
   file: z
     .any()
     .optional()
@@ -358,7 +350,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     // Insert into Supabase with error handling and retry
     let data, error
     let retryCount = 0
-    const maxRetries = 2
+    const maxRetries = 3
 
     while (retryCount <= maxRetries) {
       const result = await supabase
@@ -380,7 +372,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       if (error.code === 'PGRST204' && retryCount < maxRetries) {
         // Schema cache issue, wait and retry
         console.log(`[API] Schema cache issue, retrying... (attempt ${retryCount + 1})`)
-        await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
+        await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds
         retryCount++
         continue
       }
