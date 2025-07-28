@@ -311,9 +311,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     
     // Prepare data for database
     const dataForDatabase = {
-      full_name: requestData.full_name.trim(),
+      name: requestData.full_name.trim(), // Map to 'name' column
       phone: requestData.phone.trim(),
       car_details: requestData.car_details.trim(),
+      full_name: requestData.full_name.trim(), // Also keep 'full_name' for compatibility
       message: requestData.message.trim()
     }
 
