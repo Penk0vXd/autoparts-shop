@@ -1,17 +1,18 @@
-# 🔧 Database Schema Fix - Column Mapping Issue
+# 🔧 Database Schema Fix - All Required Columns
 
 ## 🚨 **PROBLEM IDENTIFIED**
 
-The error shows: `null value in column "name" of relation "requests" violates not-null constraint`
+The error shows: `null value in column "part_text" of relation "requests" violates not-null constraint`
 
-This means your database table has **both old and new column names**:
-- ✅ `name` (old column, NOT NULL)
-- ✅ `full_name` (new column)
-- ✅ `phone` (NOT NULL)
-- ✅ `car_details` (new column)
-- ✅ `message` (new column)
+This means your database table has **multiple NOT NULL columns** that the API needs to handle:
+- ✅ `name` (NOT NULL) ← **Required**
+- ✅ `phone` (NOT NULL) ← **Required**
+- ✅ `part_text` (NOT NULL) ← **Required**
+- ✅ `car_details` (NOT NULL) ← **Required**
+- ✅ `full_name` (NOT NULL) ← **Required**
+- ✅ `message` (NOT NULL) ← **Required**
 
-The API was trying to insert into `full_name` but the database expects `name`.
+The API was missing the `part_text` column in the insert.
 
 ## ✅ **SOLUTION**
 
@@ -53,12 +54,15 @@ ALTER TABLE requests ALTER COLUMN car_details SET NOT NULL;
 -- Make sure 'message' column is NOT NULL  
 ALTER TABLE requests ALTER COLUMN message SET NOT NULL;
 
+-- Make sure 'part_text' column is NOT NULL (it already is based on error)
+-- We don't need to alter it since it's already NOT NULL
+
 -- Step 4: Ensure 'created_at' has default value
 ALTER TABLE requests ALTER COLUMN created_at SET DEFAULT NOW();
 
--- Step 5: Test insert with correct column mapping
-INSERT INTO requests (name, phone, car_details, full_name, message) 
-VALUES ('TEST USER', '+1234567890', 'BMW 320i 2018', 'TEST USER', 'I need brake pads')
+-- Step 5: Test insert with correct column mapping (all required columns)
+INSERT INTO requests (name, phone, car_details, full_name, message, part_text) 
+VALUES ('TEST USER', '+1234567890', 'BMW 320i 2018', 'TEST USER', 'I need brake pads', 'I need brake pads')
 ON CONFLICT DO NOTHING;
 
 -- Step 6: Clean up test data
@@ -93,18 +97,18 @@ SELECT * FROM requests LIMIT 0;
 
 ## 🎯 **What This Fixes**
 
-### **Column Mapping Issue**
-- ✅ **API now inserts into both `name` and `full_name` columns**
-- ✅ **Handles the NOT NULL constraint on `name` column**
+### **All Required Columns**
+- ✅ **API now inserts into ALL required columns**: `name`, `phone`, `part_text`, `car_details`, `full_name`, `message`
+- ✅ **Handles all NOT NULL constraints**
+- ✅ **Maps form data to correct database columns**
+- ✅ **Maintains backward compatibility**
+- ✅ **Proper error handling**
+
+### **Database Schema**
 - ✅ **Ensures all required columns exist**
 - ✅ **Sets proper NOT NULL constraints**
 - ✅ **Refreshes schema cache**
-
-### **API Improvements**
-- ✅ **Correct column mapping in API route**
-- ✅ **Handles both old and new column names**
-- ✅ **Maintains backward compatibility**
-- ✅ **Proper error handling**
+- ✅ **Tests insert functionality with all columns**
 
 ## 🚀 **Expected Result**
 
@@ -125,4 +129,4 @@ After running the SQL, you should see:
 3. **Form submissions working** without constraint errors
 4. **Discord notifications being sent**
 
-The issue was that the API was trying to insert into `full_name` but the database has a NOT NULL constraint on the `name` column. 
+The issue was that the API was missing the `part_text` column in the insert, which has a NOT NULL constraint. 
