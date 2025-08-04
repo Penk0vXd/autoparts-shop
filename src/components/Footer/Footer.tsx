@@ -142,7 +142,7 @@ export default function Footer({ className = '' }: FooterProps) {
         </div>
 
         {/* Newsletter Signup */}
-        <div className="border-t border-gray-700 pt-8 mb-8">
+        {/*<div className="border-t border-gray-700 pt-8 mb-8">
           <div className="text-center">
             <h4 className="text-lg font-semibold text-white mb-2">
               Абонирайте се за новини
@@ -161,7 +161,7 @@ export default function Footer({ className = '' }: FooterProps) {
               </button>
             </div>
           </div>
-        </div>
+        </div>*/}
 
         {/* Bottom Section */}
         <div className="border-t border-gray-700 pt-8">

@@ -8,10 +8,10 @@ import { Loader2, Send } from 'lucide-react'
 import { sendContactEmail } from '@/app/actions/sendContactEmail'
 
 const contactSchema = z.object({
-  name: z.string().min(2, 'Името трябва да е поне 2 символа'),
+  name: z.string().min(2, 'Името трябва да е поне 2 символа').max(100, 'Името е твърде дълго'),
   email: z.string().email('Невалиден email адрес'),
-  subject: z.string().min(3, 'Темата трябва да е поне 3 символа'),
-  message: z.string().min(10, 'Съобщението трябва да е поне 10 символа')
+  subject: z.string().min(3, 'Темата трябва да е поне 3 символа').max(200, 'Темата е твърде дълга').optional(),
+  message: z.string().min(10, 'Съобщението трябва да е поне 10 символа').max(2000, 'Съобщението е твърде дълго')
 })
 
 type ContactFormData = z.infer<typeof contactSchema>
@@ -41,13 +41,13 @@ export function ContactForm() {
       await sendContactEmail(data)
       setSubmitMessage({
         type: 'success',
-        text: 'Благодарим, ще се свържем с вас!'
+        text: 'Благодарим ви! Ще се свържем с вас скоро.'
       })
       reset()
     } catch (error) {
       setSubmitMessage({
         type: 'error',
-        text: 'Възникна грешка при изпращането. Моля опитайте отново.'
+        text: 'Възникна грешка при изпращане. Моля, опитайте отново.'
       })
     } finally {
       setIsSubmitting(false)
@@ -97,7 +97,7 @@ export function ContactForm() {
 
         <div>
           <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-            Тема *
+            Тема
           </label>
           <input
             {...register('subject')}
@@ -105,7 +105,7 @@ export function ContactForm() {
             id="subject"
             aria-label="Тема на съобщението"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            placeholder="Кратко описание на въпроса"
+            placeholder="Кратко описание на въпроса (по желание)"
           />
           {errors.subject && (
             <p className="mt-1 text-sm text-red-600">{errors.subject.message}</p>
@@ -142,7 +142,7 @@ export function ContactForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full flex items-center justify-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full flex items-center justify-center px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? (
             <>

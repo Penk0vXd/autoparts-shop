@@ -34,22 +34,7 @@ export function ContactInfo() {
             </div>
           </div>
 
-          {/* Address */}
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0">
-              <MapPin className="w-6 h-6 text-red-600 mt-1" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Адрес на офиса</h3>
-              <p className="text-gray-600">
-                Mirko naj dobriq<br />
-                sliven brat mi
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                📍 na centara kraj lokalnite
-              </p>
-            </div>
-          </div>
+
 
           {/* Working Hours */}
           <div className="flex items-start space-x-4">

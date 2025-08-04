@@ -24,16 +24,6 @@ export default function ContactPage() {
           <ContactInfo />
           <ContactForm />
         </section>
-
-        <section className="mt-12">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2932.4089447187445!2d23.31918871544596!3d42.69751307916844!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40aa8682cb317bf5%3A0x400a01269bf5e60!2sSofia%2C%20Bulgaria!5e0!3m2!1sen!2s!4v1647856789123!5m2!1sen!2s"
-            className="w-full aspect-video rounded-xl border"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Местоположение на офиса"
-          />
-        </section>
       </div>
     </main>
   )
