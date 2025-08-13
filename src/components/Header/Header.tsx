@@ -221,18 +221,6 @@ export function Header() {
               <CartIcon />
             </Button>
           )}
-
-          {/* User Dropdown */}
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Потребителски профил"
-            className="relative h-9 w-9 text-muted-foreground hover:text-foreground"
-          >
-            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-xs font-medium">У</span>
-            </div>
-          </Button>
         </div>
       </div>
 
